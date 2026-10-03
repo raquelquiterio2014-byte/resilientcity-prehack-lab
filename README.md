@@ -1,2 +1,109 @@
-# resilientcity-prehack-lab
-Pre-hackathon learning lab for experimenting with multi-agent architectures and technologies for ResilientCity AI.
+# ResilientCity AI — Pre-Hackathon Learning Lab
+
+> **Important:** This repository is a disposable learning and experimentation environment created before the Open Agent Hackathon 2026 build window. It is **not** the competition implementation.
+
+ResilientCity AI explores an explainable multi-agent approach to urban flood incident decision support.
+
+## Learning objective
+
+The lab tests how specialized components can share structured state, challenge a proposed decision, request revision, apply safety constraints, and produce a human-readable result.
+
+**AI recommends. AI explains. Humans decide.**
+
+## Current lab workflow
+
+```text
+Incident
+   |
+Planner
+   |
+Evidence
+   |
+Risk / Impact
+   |
+Decision
+   |
+Critic / Evaluator
+   |---- REVISE ----> Revision ----> Evidence
+   |
+  PASS
+   |
+Safety
+   |
+Reporter
+   |
+Explainable response
+```
+
+The current implementation is deliberately deterministic. Agent names represent specialized workflow roles used to study multi-agent orchestration patterns; no external LLM is called yet.
+
+## What is implemented
+
+- Python package structure
+- Pydantic data contracts
+- LangGraph state graph
+- Planner role
+- Evidence role
+- Risk / Impact role
+- Decision role
+- Critic / Evaluator role
+- Conditional revision loop
+- Safety review
+- Human-review escalation
+- Reporter role
+- Execution trace
+- Pytest tests
+- Example incident
+
+## Not implemented yet
+
+- LLM integration
+- live weather API
+- geospatial API
+- MCP tools/server
+- FastAPI
+- SQLite persistence
+- Streamlit UI
+- sponsor technologies
+- production data
+- autonomous emergency actions
+
+## Requirements
+
+Recommended: Python 3.12.
+
+```bash
+python -m venv .venv
+```
+
+Windows:
+
+```bash
+.venv\Scripts\activate
+```
+
+Install:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+Run:
+
+```bash
+python main.py
+```
+
+Tests:
+
+```bash
+python -m pytest -q
+```
+
+## Safety boundary
+
+This educational lab does not autonomously close roads, dispatch emergency resources, order evacuations, or issue authoritative emergency commands. Incomplete evidence and low-confidence situations are escalated for human review.
+
+## Repository boundary
+
+Any future hackathon competition implementation should be created separately during the official build window and should comply with the applicable official rules. Code from this learning repository should not be assumed to be eligible for reuse in a competition submission.
