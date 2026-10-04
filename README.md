@@ -107,3 +107,28 @@ This educational lab does not autonomously close roads, dispatch emergency resou
 ## Repository boundary
 
 Any future hackathon competition implementation should be created separately during the official build window and should comply with the applicable official rules. Code from this learning repository should not be assumed to be eligible for reuse in a competition submission.
+
+
+## V3 — Visual GUI
+
+V3 adds a desktop graphical interface for the ResilientCity pre-hackathon learning lab.
+
+- Incident input form
+- Multi-agent analysis dashboard
+- Priority and confidence indicators
+- Safety / Human Gate status
+- Explainable report
+- Agent execution trace
+- Shared LangGraph state
+- Visual architecture panel
+- Windows launcher (`run_gui.bat`)
+
+Run:
+
+```bash
+python gui.py
+```
+
+Or on Windows, double-click `run_gui.bat`.
+
+> V3 remains a pre-hackathon educational lab. It is not the competition implementation.
