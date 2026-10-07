@@ -154,3 +154,31 @@ Run the evaluation suite through `resilientcity/evaluation.py` or `pytest`.
 The former percentage-style confidence display has been replaced by a deterministic **Evidence Strength score (0–100)**. It summarizes rule-based evidence completeness/strength and is explicitly **not a calibrated probability of correctness**.
 
 The synthetic scenarios are stored in `evaluation/scenarios.json`. This is a supervised learning/evaluation lab, not a validated emergency-response benchmark or production pilot.
+
+
+## V4 Experimental — Uncertainty, adversarial evaluation, and shadow-mode boundary
+
+V4 preserves V3 as the controlled baseline and deliberately makes the evaluation less favorable to the system. The 8 original synthetic cases remain, and 12 adversarial/boundary cases add missing evidence, contradictory sources, overlapping critical-infrastructure context, threshold cases, stale/unavailable evidence, missing location/rainfall, and out-of-scope incidents.
+
+The decision space is no longer forced to LOW / MEDIUM / HIGH. V4 can return:
+- INSUFFICIENT_EVIDENCE
+- UNRESOLVED
+- OUT_OF_SCOPE
+
+The Critic has PASS / REVISE / ESCALATE routes. Safety remains deterministic and can require human review or block an out-of-scope recommendation.
+
+Evaluation now includes decision agreement, manual-baseline agreement, evidence traceability, appropriate escalation, missed/unnecessary escalation, insufficient-evidence recognition, contradiction detection, forced-classification rate, workflow time, and reproducibility.
+
+> **Workflow validation ≠ real-world readiness.**
+
+> **These controlled scenarios are being used to evaluate architecture behaviour, traceability, escalation and reproducibility.**
+
+> **A good outcome is not always a classification. When evidence is missing, contradictory, or outside the system’s validated scope, recognising uncertainty and escalating to a human is itself a successful outcome.**
+
+### Roadmap boundary
+
+The next research stage is LLM-assisted Evidence and Critic roles using structured output, Pydantic validation, provenance, bounded retry, and deterministic fallback. The deterministic Safety role remains authoritative for the lab safety boundary.
+
+Historical-case evaluation is intentionally not claimed here. Before any operational pilot, historical cases should be independently reviewed/labelled and compared with a manual baseline. Any operational pilot should begin in **shadow mode**, where the system logs recommendations but people make every operational decision.
+
+**AI recommends. AI explains. Humans decide.**
