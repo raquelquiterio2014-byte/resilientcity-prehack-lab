@@ -64,7 +64,7 @@ class ResilientCityGUI(tk.Tk):
         left.grid_columnconfigure(0,weight=1); left.grid_rowconfigure(9,weight=1)
 
         summary=tk.Frame(right,bg="#ffffff"); summary.pack(fill="x")
-        self.priority=self._metric(summary,"Priority",0); self.confidence=self._metric(summary,"Confidence",1); self.safety=self._metric(summary,"Safety / Human Gate",2)
+        self.priority=self._metric(summary,"Priority",0); self.confidence=self._metric(summary,"Evidence Strength",1); self.safety=self._metric(summary,"Safety / Human Gate",2)
         nb=ttk.Notebook(right); nb.pack(fill="both",expand=True,pady=(14,0))
         tabs=[tk.Frame(nb,bg="#ffffff") for _ in range(3)]
         for tab,name in zip(tabs,["Explainable Report","Agent Trace","Shared State"]): nb.add(tab,text=name)
@@ -91,7 +91,7 @@ class ResilientCityGUI(tk.Tk):
             r=self.app.invoke({"incident":i.model_dump(),"revision_count":0,"trace":[]})
         except (ValidationError,ValueError) as e: messagebox.showerror("Invalid incident data",str(e)); return
         except Exception as e: messagebox.showerror("Execution error",f"The multi-agent workflow could not run:\n\n{e}"); return
-        d=r.get("decision",{}); s=r.get("safety",{}); self.priority.config(text=d.get("priority","—")); c=d.get("confidence"); self.confidence.config(text=f"{c:.0%}" if isinstance(c,(int,float)) else "—"); self.safety.config(text=s.get("status","—"))
+        d=r.get("decision",{}); s=r.get("safety",{}); self.priority.config(text=d.get("priority","—")); e=r.get("evidence",{}); score=e.get("evidence_score"); label=e.get("score_label","—"); self.confidence.config(text=f"{label} — {score}/100\nRule-based, not probability" if isinstance(score,(int,float)) else "—"); self.safety.config(text=s.get("status","—"))
         self._replace(self.report,r.get("final_report","No report generated.")); self._replace(self.trace,"\n".join(f"{n+1:02d}. {x}" for n,x in enumerate(r.get("trace",[]))))
         self._replace(self.state,"\n".join(f"[{k.upper()}]\n{r[k]}\n" for k in ("incident","evidence","risk","decision","critic","safety","revision_count") if k in r))
     def clear_results(self):
