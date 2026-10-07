@@ -182,3 +182,32 @@ The next research stage is LLM-assisted Evidence and Critic roles using structur
 Historical-case evaluation is intentionally not claimed here. Before any operational pilot, historical cases should be independently reviewed/labelled and compared with a manual baseline. Any operational pilot should begin in **shadow mode**, where the system logs recommendations but people make every operational decision.
 
 **AI recommends. AI explains. Humans decide.**
+
+
+## V5 Experimental — VIGIE, field cases, and LLM-ready evidence reasoning
+
+V5 preserves V4 as the deterministic uncertainty baseline and adds contextual evidence intelligence.
+
+### Implemented in V5-A
+- VIGIE-style contextual vulnerability flags
+- antecedent dry-period input
+- soil-saturation input
+- impervious-surface input
+- drainage-condition input
+- separation between evidence completeness and contextual uncertainty
+- Human Gate escalation when apparently complete evidence still contains material terrain/drainage vulnerability
+- partner field-case contracts with an explicit evidence cutoff
+- strict separation of later historical outcome from future LLM input
+- Giroussens challenge-case template, explicitly marked as partner-supplied and pending independent documentation
+- regression tests for dry-period/drainage and saturated-soil conditions
+
+The current contextual thresholds (>15 dry days, >80% soil saturation, >=80% impervious surface) are **experimental guardrails for the learning lab**, not universal hydrological laws and not calibrated flood probabilities.
+
+### Planned V5-B
+LLM assistance will be introduced first in Evidence and Critic/Evaluator through structured Pydantic output, bounded retry, deterministic fallback, provenance references, and trace disclosure. Safety remains deterministic.
+
+Partner-supplied field cases are designed to be consumed by this LLM path using only evidence available at or before the case cutoff. Later outcomes remain evaluator-only to reduce hindsight leakage.
+
+**Complete data does not necessarily mean sufficient decision evidence.**
+
+**AI recommends. AI explains. Humans decide.**
