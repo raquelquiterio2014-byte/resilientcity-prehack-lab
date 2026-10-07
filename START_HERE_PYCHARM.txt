@@ -1,6 +1,6 @@
-RESILIENTCITY AI V3 — PYCHARM LOCAL EXECUTION
+RESILIENTCITY AI V4 EXPERIMENTAL — PYCHARM LOCAL EXECUTION
 
-This package is intended to be run locally in PyCharm on Windows.
+This branch preserves V3 as the controlled baseline and extends the learning lab with uncertainty-aware, adversarial evaluation.
 
 1. Open PyCharm.
 2. File > Open and select this repository.
@@ -12,28 +12,30 @@ This package is intended to be run locally in PyCharm on Windows.
    python -m pytest -q
 7. Open gui.py and Run 'gui'.
 
-GUI validation checklist:
-[ ] Incident input is visible
-[ ] Run Multi-Agent Analysis button is visible
-[ ] Priority card is visible
-[ ] Evidence Strength card is visible
-[ ] Safety / Human Gate card is visible
-[ ] Explainable Report tab is visible
-[ ] Agent Trace tab is visible
-[ ] Shared State tab is visible
-[ ] Pilot Evaluation tab is visible
-[ ] Run Pilot Evaluation button populates the dashboard
-[ ] Decision Agreement card is populated
-[ ] Manual Baseline card is populated
-[ ] Evidence Traceability card is populated
-[ ] Escalations card is populated
-[ ] Reproducibility card is populated
-[ ] Individual scenario results appear below the cards
+V4 validation checklist:
+[ ] GUI opens as V4 Experimental
+[ ] Scenario selector loads 20 synthetic scenarios
+[ ] Original controlled scenarios remain available
+[ ] Missing evidence can return INSUFFICIENT_EVIDENCE
+[ ] Contradictory evidence can return UNRESOLVED
+[ ] Out-of-scope evidence can return OUT_OF_SCOPE
+[ ] Overlapping/critical context can trigger Human Gate
+[ ] Critic can PASS, REVISE, or ESCALATE
+[ ] Safety can APPROVE, APPROVE_WITH_LIMITATIONS, HUMAN_REVIEW_REQUIRED, or BLOCK
+[ ] Agent Trace and Shared State expose uncertainty handling
+[ ] Pilot Evaluation populates the dashboard
+[ ] Forced-classification rate is reported
+[ ] Insufficient-evidence recognition is reported
+[ ] Contradiction detection is reported
+[ ] Evidence traceability and reproducibility are reported
 
 Methodology:
-Use the wording:
-"Initial supervised evaluation: 8/8 labelled synthetic scenarios matched the expected decision."
-Do NOT describe this as 100% real-world accuracy.
+"These controlled scenarios are being used to evaluate architecture behaviour, traceability, escalation and reproducibility."
 
-The timing metric is "Average Workflow Execution Time". It is NOT human review time.
-Evidence Strength is a deterministic rule-based score and is NOT a calibrated probability.
+"Workflow validation ≠ real-world readiness."
+
+"A good outcome is not always a classification. When evidence is missing, contradictory, or outside the system's validated scope, recognising uncertainty and escalating to a human is itself a successful outcome."
+
+Do NOT describe synthetic results as real-world accuracy.
+The timing metric is workflow execution time, NOT human review time.
+Any future operational pilot must begin in shadow mode, with people making every operational decision.
