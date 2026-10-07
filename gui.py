@@ -20,7 +20,7 @@ class ResilientCityGUI(tk.Tk):
 
     def __init__(self):
         super().__init__()
-        self.title("ResilientCity AI — V3 | PyCharm Local Demo")
+        self.title("ResilientCity AI — V4 Experimental | PyCharm Local Demo")
         self.geometry("1440x900")
         self.minsize(1180, 760)
         self.configure(bg=self.NAVY)
@@ -44,7 +44,7 @@ class ResilientCityGUI(tk.Tk):
     def _build_ui(self):
         header = tk.Frame(self, bg=self.NAVY)
         header.pack(fill="x", padx=24, pady=(14, 10))
-        tk.Label(header, text="ResilientCity AI — V3", bg=self.NAVY, fg="white",
+        tk.Label(header, text="ResilientCity AI — V4 Experimental", bg=self.NAVY, fg="white",
                  font=("Segoe UI", 25, "bold")).pack(anchor="w")
         tk.Label(header, text="Explainable Multi-Agent System for Urban Flood Incident Response",
                  bg=self.NAVY, fg="#47c7ff", font=("Segoe UI", 11, "bold")).pack(anchor="w")
@@ -133,7 +133,7 @@ class ResilientCityGUI(tk.Tk):
 
         footer = tk.Label(
             self,
-            text="V3 local PyCharm demo | Evidence Strength is rule-based and is not a calibrated probability.",
+            text="V4 Experimental local PyCharm demo | Evidence Strength is rule-based and is not a calibrated probability.",
             bg=self.BLUE, fg="white", font=("Segoe UI", 9), pady=7
         )
         footer.pack(fill="x", side="bottom")
@@ -167,7 +167,7 @@ class ResilientCityGUI(tk.Tk):
         incident = scenario["incident"]
         self.incident_id.set(incident["incident_id"])
         self.location.set(incident["location"])
-        self.rainfall.set(str(incident["rainfall_mm"]))
+        self.rainfall.set("" if incident["rainfall_mm"] is None else str(incident["rainfall_mm"]))
         self.road_status.set(incident["road_status"])
         self.description.delete("1.0", "end")
         self.description.insert("1.0", incident["description"])
@@ -258,7 +258,7 @@ class ResilientCityGUI(tk.Tk):
                 incident_id=self.incident_id.get().strip(),
                 location=self.location.get().strip(),
                 description=self.description.get("1.0", "end").strip(),
-                rainfall_mm=float(self.rainfall.get()),
+                rainfall_mm=float(self.rainfall.get()) if self.rainfall.get().strip() else None,
                 road_status=self.road_status.get(),
             )
             result = self.app.invoke({
@@ -312,9 +312,8 @@ class ResilientCityGUI(tk.Tk):
         total = metrics["scenarios"]
 
         self.eval_statement.config(
-            text=f"Initial supervised evaluation: {matched}/{total} labelled synthetic scenarios "
-                 "matched the expected decision.\n"
-                 "This is an initial synthetic evaluation — not a claim of real-world accuracy."
+            text=f"Adversarial workflow evaluation: {matched}/{total} synthetic scenarios matched the expected outcome.\n"
+                 "Workflow validation ≠ real-world readiness. These cases test uncertainty, conflict, escalation and reproducibility."
         )
         self.eval_decision.config(text=f"{matched}/{total}\n({metrics['decision_agreement']:.0%})")
         self.eval_baseline.config(text=f"{metrics['baseline_agreement']:.0%}")
@@ -325,7 +324,7 @@ class ResilientCityGUI(tk.Tk):
         )
         self.eval_repro.config(text=f"{metrics['reproducibility']:.0%}")
         self.eval_execution_time.config(
-            text=f"Average Workflow Execution Time: {metrics['avg_review_time_ms']:.2f} ms"
+            text=f"Average Workflow Execution Time: {metrics['avg_workflow_time_ms']:.2f} ms"
         )
         self.eval_scenarios.config(text=f"Scenarios: {total}")
 
@@ -343,8 +342,10 @@ class ResilientCityGUI(tk.Tk):
         lines.extend([
             "",
             "Methodological note:",
-            "The scenarios are labelled synthetic cases created for supervised evaluation of the lab workflow.",
-            "A perfect result on this small set does not establish 100% real-world accuracy.",
+            "A good outcome is not always a classification. Missing, contradictory, or out-of-scope evidence should be escalated rather than forced into LOW/MEDIUM/HIGH.",
+            "These controlled scenarios evaluate architecture behaviour, traceability, escalation and reproducibility.",
+            "Workflow validation ≠ real-world readiness. Historical cases will require independent review before any operational pilot.",
+            "Any future operational pilot begins in SHADOW MODE: people make every decision.",
             "The timing above measures workflow execution time, not human review time.",
         ])
         self._replace(self.eval_results, "\n\n".join(lines))
