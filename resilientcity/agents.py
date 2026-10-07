@@ -1,120 +1,74 @@
-from .models import (
-    Incident, EvidenceAssessment, RiskAssessment, DecisionProposal,
-    CriticReview, SafetyReview,
-)
+from .models import Incident, EvidenceAssessment, RiskAssessment, DecisionProposal, CriticReview, SafetyReview
 from .state import ResilientCityState
 
-def _trace(state: ResilientCityState, message: str) -> list[str]:
-    return [*state.get("trace", []), message]
+def _trace(state, message): return [*state.get("trace", []), message]
 
-def planner_agent(state: ResilientCityState) -> dict:
-    return {"trace": _trace(state, "Planner: incident accepted; evidence and risk analysis requested.")}
+def planner_agent(state):
+    return {"trace": _trace(state, "Planner: incident accepted; evidence quality and risk analysis requested.")}
 
-def evidence_agent(state: ResilientCityState) -> dict:
-    incident = Incident.model_validate(state["incident"])
-    weather_signal = "high" if incident.rainfall_mm >= 50 else "moderate" if incident.rainfall_mm >= 20 else "low"
-    complete = incident.road_status != "unknown"
+def evidence_agent(state):
+    i=Incident.model_validate(state["incident"]); missing=[]; conflicts=[]
+    if not i.location.strip(): missing.append("location")
+    if i.rainfall_mm is None: missing.append("rainfall")
+    if i.road_status=="unknown": missing.append("road_status")
+    reports=set(i.road_reports + ([] if i.road_status=="unknown" else [i.road_status]))
+    if len(reports-{"unknown"})>1: conflicts.append("road_status")
+    if i.source_unavailable: missing.append("source_unavailable")
+    if i.evidence_stale: missing.append("fresh_evidence")
+    weather="missing" if i.rainfall_mm is None else "high" if i.rainfall_mm>=50 else "moderate" if i.rainfall_mm>=20 else "low"
+    if i.out_of_scope: state_name="OUT_OF_SCOPE"
+    elif conflicts: state_name="CONTRADICTORY"
+    elif missing: state_name="MISSING"
+    elif i.critical_infrastructure: state_name="OVERLAPPING"
+    else: state_name="COMPLETE"
+    score=max(0,100-25*len(set(missing))-35*len(conflicts)-(20 if i.evidence_stale else 0))
+    label="STRONG" if score>=80 else "MODERATE" if score>=55 else "LOW"
+    e=EvidenceAssessment(state=state_name,weather_signal=weather,road_status=i.road_status,conflicts=conflicts,missing_fields=sorted(set(missing)),evidence_score=score,score_label=label,evidence_complete=state_name=="COMPLETE")
+    return {"evidence":e.model_dump(),"trace":_trace(state,f"Evidence: state={state_name}, missing={e.missing_fields}, conflicts={conflicts}, score={score}/100.")}
 
-    weather_points = 25 if weather_signal == "high" else 18 if weather_signal == "moderate" else 10
-    road_points = 25 if incident.road_status in {"flooded", "closed"} else 20 if incident.road_status == "open" else 5
-    completeness_points = 25 if complete else 10
-    consistency_points = 20 if complete else 12
-    evidence_score = min(weather_points + road_points + completeness_points + consistency_points, 100)
-    score_label = "STRONG" if evidence_score >= 80 else "MODERATE" if evidence_score >= 55 else "LOW"
+def risk_agent(state):
+    i=Incident.model_validate(state["incident"]); e=EvidenceAssessment.model_validate(state["evidence"])
+    if e.state=="OUT_OF_SCOPE": level,r="OUT_OF_SCOPE","Incident is outside the validated urban-flood scope."
+    elif e.state=="CONTRADICTORY": level,r="UNRESOLVED","Material evidence conflicts prevent reliable risk classification."
+    elif e.state=="MISSING": level,r="UNRESOLVED","Critical evidence is missing, unavailable, or stale."
+    elif i.road_status in {"flooded","closed"}: level,r="HIGH","Flooded or closed road is strong operational-risk evidence."
+    elif i.critical_infrastructure: level,r="MEDIUM","Critical-infrastructure context raises impact despite an otherwise lower category."
+    elif e.weather_signal=="high": level,r="MEDIUM","Heavy rainfall warrants increased monitoring even with an open road."
+    else: level,r="LOW","Available supported indicators suggest lower immediate risk."
+    x=RiskAssessment(level=level,rationale=r)
+    return {"risk":x.model_dump(),"trace":_trace(state,f"Risk: {level} — {r}")}
 
-    evidence = EvidenceAssessment(
-        weather_signal=weather_signal,
-        road_status=incident.road_status,
-        evidence_complete=complete,
-        evidence_score=evidence_score,
-        score_label=score_label,
-    )
-    return {
-        "evidence": evidence.model_dump(),
-        "trace": _trace(state, f"Evidence: weather={weather_signal}, road={incident.road_status}, score={evidence_score}/100 ({score_label})."),
-    }
-
-def risk_agent(state: ResilientCityState) -> dict:
-    evidence = EvidenceAssessment.model_validate(state["evidence"])
-    if evidence.road_status in {"flooded", "closed"}:
-        level = "HIGH"
-        rationale = "Flooded or closed road is treated as strong operational risk evidence."
-    elif evidence.weather_signal == "high" and evidence.road_status == "unknown":
-        level = "MEDIUM"
-        rationale = "Heavy rainfall with unverified road condition requires caution."
-    elif evidence.weather_signal == "high":
-        level = "MEDIUM"
-        rationale = "Heavy rainfall is present, but the road is reported open."
-    elif evidence.weather_signal == "moderate" and evidence.road_status == "unknown":
-        level = "MEDIUM"
-        rationale = "Moderate rainfall plus missing road evidence creates uncertainty."
+def decision_agent(state):
+    e=EvidenceAssessment.model_validate(state["evidence"]); r=RiskAssessment.model_validate(state["risk"])
+    if e.state=="OUT_OF_SCOPE": p,rec="OUT_OF_SCOPE","Route to a human or a workflow validated for this incident type."
+    elif e.state=="CONTRADICTORY": p,rec="UNRESOLVED","Do not force a category; reconcile conflicting evidence and require human review."
+    elif e.state=="MISSING": p,rec="INSUFFICIENT_EVIDENCE","Obtain missing or fresh evidence before assigning LOW, MEDIUM, or HIGH."
     else:
-        level = "LOW"
-        rationale = "Available deterministic indicators suggest lower immediate risk."
-    risk = RiskAssessment(level=level, rationale=rationale)
-    return {"risk": risk.model_dump(), "trace": _trace(state, f"Risk: {level} — {rationale}")}
+        p=r.level
+        rec={"HIGH":"Escalate for human review and verify affected roads/critical infrastructure before action.","MEDIUM":"Request targeted verification and present the recommendation for human review when impact is sensitive.","LOW":"Continue monitoring and document evidence; no high-impact action is recommended."}[p]
+    d=DecisionProposal(priority=p,recommendation=rec,evidence_score=e.evidence_score)
+    return {"decision":d.model_dump(),"trace":_trace(state,f"Decision: priority={p}; forced classification avoided={p in {'INSUFFICIENT_EVIDENCE','UNRESOLVED','OUT_OF_SCOPE'}}.")}
 
-def decision_agent(state: ResilientCityState) -> dict:
-    risk = RiskAssessment.model_validate(state["risk"])
-    evidence = EvidenceAssessment.model_validate(state["evidence"])
-    priority = risk.level
-    recommendations = {
-        "HIGH": "Escalate immediately for human review; verify affected roads and critical infrastructure before operational action.",
-        "MEDIUM": "Request targeted verification and prepare a human review of road and incident conditions.",
-        "LOW": "Continue monitoring and document the available evidence; no high-impact action is recommended from current data.",
-    }
-    decision = DecisionProposal(
-        priority=priority,
-        recommendation=recommendations[priority],
-        evidence_score=evidence.evidence_score,
-    )
-    return {
-        "decision": decision.model_dump(),
-        "trace": _trace(state, f"Decision: priority={priority}, evidence_score={evidence.evidence_score}/100."),
-    }
+def critic_agent(state):
+    e=EvidenceAssessment.model_validate(state["evidence"]); n=state.get("revision_count",0)
+    if e.state in {"MISSING","CONTRADICTORY"} and n<1: x=CriticReview(status="REVISE",reason="Evidence is missing or contradictory; one bounded re-check is required.")
+    elif e.state in {"MISSING","CONTRADICTORY","OUT_OF_SCOPE"}: x=CriticReview(status="ESCALATE",reason="Uncertainty remains after bounded review; do not force classification.")
+    else: x=CriticReview(status="PASS",reason="Evidence limitations are explicit and the proposal may proceed to deterministic safety review.")
+    return {"critic":x.model_dump(),"trace":_trace(state,f"Critic: {x.status} — {x.reason}")}
 
-def critic_agent(state: ResilientCityState) -> dict:
-    evidence = EvidenceAssessment.model_validate(state["evidence"])
-    revisions = state.get("revision_count", 0)
-    if not evidence.evidence_complete and revisions < 1:
-        review = CriticReview(status="REVISE", reason="Road condition is unverified; request another evidence cycle.")
-    else:
-        review = CriticReview(status="PASS", reason="Uncertainty is explicit and can proceed to safety review.")
-    return {"critic": review.model_dump(), "trace": _trace(state, f"Critic: {review.status} — {review.reason}")}
+def revision_agent(state):
+    n=state.get("revision_count",0)+1
+    return {"revision_count":n,"trace":_trace(state,f"Revision: bounded cycle {n}; deterministic lab preserves unresolved evidence when no new source exists.")}
 
-def revision_agent(state: ResilientCityState) -> dict:
-    count = state.get("revision_count", 0) + 1
-    return {
-        "revision_count": count,
-        "trace": _trace(state, f"Revision: cycle {count}; no new source is available in the deterministic lab, so unresolved evidence is preserved for safety escalation."),
-    }
+def safety_agent(state):
+    d=DecisionProposal.model_validate(state["decision"]); e=EvidenceAssessment.model_validate(state["evidence"])
+    if d.priority=="OUT_OF_SCOPE": x=SafetyReview(status="BLOCKED",reason="Outside validated scope; no operational recommendation is authorized.")
+    elif d.priority in {"INSUFFICIENT_EVIDENCE","UNRESOLVED","HIGH"} or e.state in {"MISSING","CONTRADICTORY","OVERLAPPING"}: x=SafetyReview(status="HUMAN_REVIEW_REQUIRED",reason="Uncertainty, conflict, critical context, or high impact requires a person to decide.")
+    elif d.priority=="LOW": x=SafetyReview(status="APPROVED",reason="Decision support may be shown; no autonomous action is authorized.")
+    else: x=SafetyReview(status="APPROVED_WITH_LIMITATIONS",reason="Recommendation may be shown with limitations; no autonomous action is authorized.")
+    return {"safety":x.model_dump(),"trace":_trace(state,f"Safety: {x.status}.")}
 
-def safety_agent(state: ResilientCityState) -> dict:
-    decision = DecisionProposal.model_validate(state["decision"])
-    evidence = EvidenceAssessment.model_validate(state["evidence"])
-    if decision.priority == "HIGH":
-        review = SafetyReview(status="HUMAN_REVIEW_REQUIRED", reason="High-priority recommendations require human operational review.")
-    elif not evidence.evidence_complete or evidence.evidence_score < 70:
-        review = SafetyReview(status="HUMAN_REVIEW_REQUIRED", reason="Critical evidence is incomplete or the rule-based evidence score is below the review threshold.")
-    elif decision.priority == "LOW" and evidence.evidence_complete:
-        review = SafetyReview(status="APPROVED", reason="Low-priority decision support may be presented without escalation; no autonomous action is authorized.")
-    else:
-        review = SafetyReview(status="APPROVED_WITH_LIMITATIONS", reason="Recommendation may be presented to a human operator; no autonomous action is authorized.")
-    return {"safety": review.model_dump(), "trace": _trace(state, f"Safety: {review.status}.")}
-
-def reporter_agent(state: ResilientCityState) -> dict:
-    incident = Incident.model_validate(state["incident"])
-    decision = DecisionProposal.model_validate(state["decision"])
-    evidence = EvidenceAssessment.model_validate(state["evidence"])
-    safety = SafetyReview.model_validate(state["safety"])
-    report = (
-        f"Incident {incident.incident_id} — {incident.location}\n"
-        f"Priority: {decision.priority}\n"
-        f"Recommendation: {decision.recommendation}\n"
-        f"Evidence strength: {evidence.score_label} ({decision.evidence_score}/100)\n"
-        "Score note: deterministic rule-based evidence score; NOT a calibrated probability of correctness.\n"
-        f"Safety status: {safety.status}\n"
-        f"Limitation: {safety.reason}\n"
-        "Principle: AI recommends. AI explains. Humans decide."
-    )
-    return {"final_report": report, "trace": _trace(state, "Reporter: explainable response generated.")}
+def reporter_agent(state):
+    i=Incident.model_validate(state["incident"]); d=DecisionProposal.model_validate(state["decision"]); e=EvidenceAssessment.model_validate(state["evidence"]); s=SafetyReview.model_validate(state["safety"])
+    report=(f"Incident {i.incident_id} — {i.location or '[location missing]'}\nDecision: {d.priority}\nEvidence state: {e.state}\nRecommendation: {d.recommendation}\nEvidence strength: {e.score_label} ({e.evidence_score}/100)\nMissing: {', '.join(e.missing_fields) or 'none'}\nConflicts: {', '.join(e.conflicts) or 'none'}\nSafety: {s.status}\nLimitation: {s.reason}\n\nWorkflow validation ≠ real-world readiness.\nA good outcome is not always a classification.\nPrinciple: AI recommends. AI explains. Humans decide.")
+    return {"final_report":report,"trace":_trace(state,"Reporter: explainable response generated; shadow-mode principle preserved.")}
