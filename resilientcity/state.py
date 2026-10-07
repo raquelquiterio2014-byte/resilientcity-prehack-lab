@@ -1,5 +1,4 @@
 from typing import Any, TypedDict
-
 class ResilientCityState(TypedDict, total=False):
     incident: dict[str, Any]
     evidence: dict[str, Any]
