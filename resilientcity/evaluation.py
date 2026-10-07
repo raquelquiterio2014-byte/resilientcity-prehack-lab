@@ -2,83 +2,44 @@ import json
 from pathlib import Path
 from statistics import mean
 from time import perf_counter
-
 from .graph import build_graph
 from .models import EvaluationResult, Incident
 
-DEFAULT_SCENARIOS = Path(__file__).resolve().parent.parent / "evaluation" / "scenarios.json"
+DEFAULT_SCENARIOS=Path(__file__).resolve().parent.parent/"evaluation"/"scenarios.json"
 
-def manual_baseline(incident: Incident) -> str:
-    if incident.road_status in {"flooded", "closed"}:
-        return "HIGH"
-    if incident.rainfall_mm >= 50:
-        return "MEDIUM"
-    if incident.rainfall_mm >= 20 and incident.road_status == "unknown":
-        return "MEDIUM"
+def manual_baseline(i):
+    if i.out_of_scope: return "OUT_OF_SCOPE"
+    if not i.location.strip() or i.rainfall_mm is None or i.source_unavailable or i.evidence_stale: return "INSUFFICIENT_EVIDENCE"
+    reports=set(i.road_reports+([] if i.road_status=="unknown" else [i.road_status]))
+    if len(reports-{"unknown"})>1: return "UNRESOLVED"
+    if i.road_status=="unknown": return "INSUFFICIENT_EVIDENCE"
+    if i.road_status in {"flooded","closed"}: return "HIGH"
+    if i.critical_infrastructure: return "MEDIUM"
+    if i.rainfall_mm>=50: return "MEDIUM"
     return "LOW"
 
-def requires_human_review(status: str) -> bool:
-    return status in {"HUMAN_REVIEW_REQUIRED", "BLOCKED"}
+def requires_human_review(s): return s in {"HUMAN_REVIEW_REQUIRED","BLOCKED"}
+def load_scenarios(path=DEFAULT_SCENARIOS):
+    with Path(path).open(encoding="utf-8") as f: return json.load(f)
+def _run_once(app,i):
+    t=perf_counter(); r=app.invoke({"incident":i.model_dump(),"revision_count":0,"trace":[]}); return r,(perf_counter()-t)*1000
 
-def load_scenarios(path: str | Path = DEFAULT_SCENARIOS) -> list[dict]:
-    with Path(path).open("r", encoding="utf-8") as handle:
-        return json.load(handle)
+def evaluate_scenario(s,reproducibility_runs=3):
+    app=build_graph(); i=Incident.model_validate(s["incident"]); r,ms=_run_once(app,i)
+    repeated=[_run_once(app,i)[0] for _ in range(max(reproducibility_runs-1,0))]
+    p=r["decision"]["priority"]; esc=requires_human_review(r["safety"]["status"]); b=manual_baseline(i); exp=s["expected_priority"]; exesc=bool(s["expected_escalation"]); e=r["evidence"]; exstate=s["expected_evidence_state"]
+    fields=("state","weather_signal","road_status","evidence_score","score_label","missing_fields","conflicts")
+    trace=sum(k in e for k in fields)/len(fields)
+    sig=(p,r["safety"]["status"],r["decision"]["recommendation"],e["state"])
+    repro=all((x["decision"]["priority"],x["safety"]["status"],x["decision"]["recommendation"],x["evidence"]["state"])==sig for x in repeated)
+    expects_insufficient=exp=="INSUFFICIENT_EVIDENCE"
+    expects_conflict=exstate=="CONTRADICTORY"
+    forced=(exstate in {"MISSING","CONTRADICTORY","OUT_OF_SCOPE"} and p in {"LOW","MEDIUM","HIGH"})
+    return EvaluationResult(scenario_id=s["scenario_id"],expected_priority=exp,predicted_priority=p,baseline_priority=b,expected_escalation=exesc,predicted_escalation=esc,expected_evidence_state=exstate,predicted_evidence_state=e["state"],evidence_traceability=trace,decision_agreement=p==exp,baseline_agreement=b==exp,appropriate_escalation=esc==exesc,missed_escalation=exesc and not esc,unnecessary_escalation=not exesc and esc,insufficient_evidence_recognized=(not expects_insufficient or p=="INSUFFICIENT_EVIDENCE"),contradiction_detected=(not expects_conflict or e["state"]=="CONTRADICTORY"),forced_classification=forced,workflow_time_ms=ms,reproducible=repro)
 
-def _run_once(app, incident: Incident) -> tuple[dict, float]:
-    start = perf_counter()
-    result = app.invoke({"incident": incident.model_dump(), "revision_count": 0, "trace": []})
-    elapsed_ms = (perf_counter() - start) * 1000
-    return result, elapsed_ms
-
-def evaluate_scenario(scenario: dict, reproducibility_runs: int = 3) -> EvaluationResult:
-    app = build_graph()
-    incident = Incident.model_validate(scenario["incident"])
-    result, review_time_ms = _run_once(app, incident)
-    repeated = [_run_once(app, incident)[0] for _ in range(max(reproducibility_runs - 1, 0))]
-
-    predicted_priority = result["decision"]["priority"]
-    predicted_escalation = requires_human_review(result["safety"]["status"])
-    baseline_priority = manual_baseline(incident)
-    expected_priority = scenario["expected_priority"]
-    expected_escalation = bool(scenario["expected_escalation"])
-
-    evidence = result.get("evidence", {})
-    traceability_fields = ("weather_signal", "road_status", "evidence_score", "score_label")
-    evidence_traceability = sum(field in evidence for field in traceability_fields) / len(traceability_fields)
-
-    signature = (predicted_priority, result["safety"]["status"], result["decision"]["recommendation"])
-    reproducible = all(
-        (item["decision"]["priority"], item["safety"]["status"], item["decision"]["recommendation"]) == signature
-        for item in repeated
-    )
-
-    return EvaluationResult(
-        scenario_id=scenario["scenario_id"],
-        expected_priority=expected_priority,
-        predicted_priority=predicted_priority,
-        baseline_priority=baseline_priority,
-        expected_escalation=expected_escalation,
-        predicted_escalation=predicted_escalation,
-        evidence_traceability=evidence_traceability,
-        decision_agreement=predicted_priority == expected_priority,
-        baseline_agreement=baseline_priority == expected_priority,
-        missed_escalation=expected_escalation and not predicted_escalation,
-        unnecessary_escalation=not expected_escalation and predicted_escalation,
-        review_time_ms=review_time_ms,
-        reproducible=reproducible,
-    )
-
-def evaluate_all(path: str | Path = DEFAULT_SCENARIOS) -> tuple[list[EvaluationResult], dict]:
-    results = [evaluate_scenario(scenario) for scenario in load_scenarios(path)]
-    count = len(results)
-    metrics = {
-        "scenarios": count,
-        "decision_agreement": mean(r.decision_agreement for r in results) if count else 0.0,
-        "baseline_agreement": mean(r.baseline_agreement for r in results) if count else 0.0,
-        "evidence_traceability": mean(r.evidence_traceability for r in results) if count else 0.0,
-        "missed_escalations": sum(r.missed_escalation for r in results),
-        "unnecessary_escalations": sum(r.unnecessary_escalation for r in results),
-        "avg_review_time_ms": mean(r.review_time_ms for r in results) if count else 0.0,
-        "reproducibility": mean(r.reproducible for r in results) if count else 0.0,
-    }
-    return results, metrics
+def evaluate_all(path=DEFAULT_SCENARIOS):
+    rs=[evaluate_scenario(s) for s in load_scenarios(path)]; n=len(rs)
+    ratio=lambda attr: mean(bool(getattr(r,attr)) for r in rs) if n else 0.0
+    missing=[r for r in rs if r.expected_priority=="INSUFFICIENT_EVIDENCE"]; conflicts=[r for r in rs if r.expected_evidence_state=="CONTRADICTORY"]
+    metrics={"scenarios":n,"decision_agreement":ratio("decision_agreement"),"baseline_agreement":ratio("baseline_agreement"),"evidence_traceability":mean(r.evidence_traceability for r in rs) if n else 0.0,"appropriate_escalation":ratio("appropriate_escalation"),"missed_escalations":sum(r.missed_escalation for r in rs),"unnecessary_escalations":sum(r.unnecessary_escalation for r in rs),"insufficient_evidence_recognition":mean(r.insufficient_evidence_recognized for r in missing) if missing else 1.0,"contradiction_detection":mean(r.contradiction_detected for r in conflicts) if conflicts else 1.0,"forced_classification_rate":mean(r.forced_classification for r in rs) if n else 0.0,"avg_workflow_time_ms":mean(r.workflow_time_ms for r in rs) if n else 0.0,"reproducibility":ratio("reproducible")}
+    return rs,metrics
