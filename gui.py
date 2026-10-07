@@ -1,3 +1,5 @@
+import json
+from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, messagebox
 from pydantic import ValidationError
@@ -23,6 +25,7 @@ class ResilientCityGUI(tk.Tk):
         self.minsize(1180, 760)
         self.configure(bg=self.NAVY)
         self.app = build_graph()
+        self.scenarios = self._load_scenarios()
         self._style()
         self._build_ui()
 
@@ -64,34 +67,45 @@ class ResilientCityGUI(tk.Tk):
         self.location = tk.StringVar(value="Central Avenue")
         self.rainfall = tk.StringVar(value="72.0")
         self.road_status = tk.StringVar(value="unknown")
+        self.scenario_choice = tk.StringVar(value="Custom Incident")
 
-        self._field(left, "Incident ID", self.incident_id, 0)
-        self._field(left, "Location", self.location, 2)
-        self._field(left, "Rainfall (mm)", self.rainfall, 4)
-        ttk.Label(left, text="Road status").grid(row=6, column=0, sticky="w", pady=(10, 4))
+        ttk.Label(left, text="Scenario").grid(row=0, column=0, sticky="w", pady=(2, 4))
+        scenario_values = ["Custom Incident"] + [
+            f"{item['scenario_id']} — {item['incident']['location']}" for item in self.scenarios
+        ]
+        self.scenario_combo = ttk.Combobox(
+            left, textvariable=self.scenario_choice, values=scenario_values, state="readonly"
+        )
+        self.scenario_combo.grid(row=1, column=0, sticky="ew")
+        self.scenario_combo.bind("<<ComboboxSelected>>", self._on_scenario_selected)
+
+        self._field(left, "Incident ID", self.incident_id, 2)
+        self._field(left, "Location", self.location, 4)
+        self._field(left, "Rainfall (mm)", self.rainfall, 6)
+        ttk.Label(left, text="Road status").grid(row=8, column=0, sticky="w", pady=(10, 4))
         ttk.Combobox(left, textvariable=self.road_status,
                      values=["unknown", "open", "closed", "flooded"],
-                     state="readonly").grid(row=7, column=0, sticky="ew")
-        ttk.Label(left, text="Incident description").grid(row=8, column=0, sticky="w", pady=(12, 4))
-        self.description = tk.Text(left, height=7, wrap="word", font=("Segoe UI", 10))
-        self.description.grid(row=9, column=0, sticky="nsew")
+                     state="readonly").grid(row=9, column=0, sticky="ew")
+        ttk.Label(left, text="Incident description").grid(row=10, column=0, sticky="w", pady=(12, 4))
+        self.description = tk.Text(left, height=6, wrap="word", font=("Segoe UI", 10))
+        self.description.grid(row=11, column=0, sticky="nsew")
         self.description.insert("1.0", "Heavy rainfall and reported street flooding near an intersection.")
 
         ttk.Button(left, text="Run Multi-Agent Analysis",
-                   command=self.run_analysis).grid(row=10, column=0, sticky="ew", pady=(14, 4))
+                   command=self.run_analysis).grid(row=12, column=0, sticky="ew", pady=(14, 4))
         ttk.Button(left, text="Run Pilot Evaluation",
-                   command=self.run_evaluation).grid(row=11, column=0, sticky="ew", pady=4)
+                   command=self.run_evaluation).grid(row=13, column=0, sticky="ew", pady=4)
         ttk.Button(left, text="Clear Results",
-                   command=self.clear_results).grid(row=12, column=0, sticky="ew", pady=4)
+                   command=self.clear_results).grid(row=14, column=0, sticky="ew", pady=4)
 
         tk.Label(left, text="AI recommends. AI explains.\nHumans decide.",
                  bg=self.CARD, fg=self.BLUE, font=("Segoe UI", 11, "bold"),
-                 justify="left").grid(row=13, column=0, sticky="w", pady=(18, 4))
+                 justify="left").grid(row=15, column=0, sticky="w", pady=(14, 4))
         tk.Label(left, text="Educational pre-hackathon lab.\nNo autonomous emergency actions.",
                  bg=self.CARD, fg=self.MUTED, font=("Segoe UI", 9),
-                 justify="left").grid(row=14, column=0, sticky="w")
+                 justify="left").grid(row=16, column=0, sticky="w")
         left.grid_columnconfigure(0, weight=1)
-        left.grid_rowconfigure(9, weight=1)
+        left.grid_rowconfigure(11, weight=1)
 
         summary = tk.Frame(right, bg=self.CARD)
         summary.pack(fill="x")
@@ -123,6 +137,41 @@ class ResilientCityGUI(tk.Tk):
             bg=self.BLUE, fg="white", font=("Segoe UI", 9), pady=7
         )
         footer.pack(fill="x", side="bottom")
+
+    def _load_scenarios(self):
+        path = Path(__file__).resolve().parent / "evaluation" / "scenarios.json"
+        try:
+            with path.open("r", encoding="utf-8") as file:
+                return json.load(file)
+        except (OSError, json.JSONDecodeError) as exc:
+            messagebox.showwarning(
+                "Scenario list unavailable",
+                f"Could not load evaluation/scenarios.json:\n\n{exc}\n\n"
+                "Custom Incident remains available."
+            )
+            return []
+
+    def _on_scenario_selected(self, _event=None):
+        selected = self.scenario_choice.get()
+        if selected == "Custom Incident":
+            return
+
+        scenario_id = selected.split(" — ", 1)[0]
+        scenario = next(
+            (item for item in self.scenarios if item.get("scenario_id") == scenario_id),
+            None
+        )
+        if not scenario:
+            return
+
+        incident = scenario["incident"]
+        self.incident_id.set(incident["incident_id"])
+        self.location.set(incident["location"])
+        self.rainfall.set(str(incident["rainfall_mm"]))
+        self.road_status.set(incident["road_status"])
+        self.description.delete("1.0", "end")
+        self.description.insert("1.0", incident["description"])
+        self.clear_results()
 
     def _field(self, parent, label, variable, row):
         ttk.Label(parent, text=label).grid(row=row, column=0, sticky="w", pady=(8, 4))
