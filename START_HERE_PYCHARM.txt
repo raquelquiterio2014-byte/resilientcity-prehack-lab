@@ -1,0 +1,39 @@
+RESILIENTCITY AI V3 — PYCHARM LOCAL EXECUTION
+
+This package is intended to be run locally in PyCharm on Windows.
+
+1. Open PyCharm.
+2. File > Open and select this repository.
+3. Configure a Python interpreter (Python 3.12 recommended).
+4. Open the PyCharm Terminal.
+5. Run:
+   python -m pip install -r requirements.txt
+6. Run tests:
+   python -m pytest -q
+7. Open gui.py and Run 'gui'.
+
+GUI validation checklist:
+[ ] Incident input is visible
+[ ] Run Multi-Agent Analysis button is visible
+[ ] Priority card is visible
+[ ] Evidence Strength card is visible
+[ ] Safety / Human Gate card is visible
+[ ] Explainable Report tab is visible
+[ ] Agent Trace tab is visible
+[ ] Shared State tab is visible
+[ ] Pilot Evaluation tab is visible
+[ ] Run Pilot Evaluation button populates the dashboard
+[ ] Decision Agreement card is populated
+[ ] Manual Baseline card is populated
+[ ] Evidence Traceability card is populated
+[ ] Escalations card is populated
+[ ] Reproducibility card is populated
+[ ] Individual scenario results appear below the cards
+
+Methodology:
+Use the wording:
+"Initial supervised evaluation: 8/8 labelled synthetic scenarios matched the expected decision."
+Do NOT describe this as 100% real-world accuracy.
+
+The timing metric is "Average Workflow Execution Time". It is NOT human review time.
+Evidence Strength is a deterministic rule-based score and is NOT a calibrated probability.
