@@ -132,3 +132,25 @@ python gui.py
 Or on Windows, double-click `run_gui.bat`.
 
 > V3 remains a pre-hackathon educational lab. It is not the competition implementation.
+
+
+## Supervised Pilot Evaluation
+
+V3 now includes an evaluation layer for labelled synthetic flood scenarios. It compares the multi-agent recommendation with an expected label and a simple deterministic manual baseline.
+
+Current pilot metrics include:
+- decision agreement
+- baseline agreement
+- evidence traceability
+- missed escalations
+- unnecessary escalations
+- review time
+- reproducibility
+
+Run the evaluation suite through `resilientcity/evaluation.py` or `pytest`.
+
+### Evidence score
+
+The former percentage-style confidence display has been replaced by a deterministic **Evidence Strength score (0–100)**. It summarizes rule-based evidence completeness/strength and is explicitly **not a calibrated probability of correctness**.
+
+The synthetic scenarios are stored in `evaluation/scenarios.json`. This is a supervised learning/evaluation lab, not a validated emergency-response benchmark or production pilot.
