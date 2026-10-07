@@ -6,10 +6,16 @@
       "location": "Central Avenue",
       "description": "Heavy rainfall with road condition not yet verified.",
       "rainfall_mm": 72,
-      "road_status": "unknown"
+      "road_status": "unknown",
+      "road_reports": [],
+      "critical_infrastructure": false,
+      "out_of_scope": false,
+      "evidence_stale": false,
+      "source_unavailable": false
     },
-    "expected_priority": "MEDIUM",
-    "expected_escalation": true
+    "expected_priority": "INSUFFICIENT_EVIDENCE",
+    "expected_escalation": true,
+    "expected_evidence_state": "MISSING"
   },
   {
     "scenario_id": "FLOOD-002",
@@ -18,10 +24,16 @@
       "location": "River Road",
       "description": "Road reported flooded after intense rainfall.",
       "rainfall_mm": 68,
-      "road_status": "flooded"
+      "road_status": "flooded",
+      "road_reports": [],
+      "critical_infrastructure": false,
+      "out_of_scope": false,
+      "evidence_stale": false,
+      "source_unavailable": false
     },
     "expected_priority": "HIGH",
-    "expected_escalation": true
+    "expected_escalation": true,
+    "expected_evidence_state": "COMPLETE"
   },
   {
     "scenario_id": "FLOOD-003",
@@ -30,10 +42,16 @@
       "location": "North Street",
       "description": "Light rainfall and road confirmed open.",
       "rainfall_mm": 10,
-      "road_status": "open"
+      "road_status": "open",
+      "road_reports": [],
+      "critical_infrastructure": false,
+      "out_of_scope": false,
+      "evidence_stale": false,
+      "source_unavailable": false
     },
     "expected_priority": "LOW",
-    "expected_escalation": false
+    "expected_escalation": false,
+    "expected_evidence_state": "COMPLETE"
   },
   {
     "scenario_id": "FLOOD-004",
@@ -42,10 +60,16 @@
       "location": "Station Road",
       "description": "Road reported closed during moderate rainfall.",
       "rainfall_mm": 28,
-      "road_status": "closed"
+      "road_status": "closed",
+      "road_reports": [],
+      "critical_infrastructure": false,
+      "out_of_scope": false,
+      "evidence_stale": false,
+      "source_unavailable": false
     },
     "expected_priority": "HIGH",
-    "expected_escalation": true
+    "expected_escalation": true,
+    "expected_evidence_state": "COMPLETE"
   },
   {
     "scenario_id": "FLOOD-005",
@@ -54,10 +78,16 @@
       "location": "Market Avenue",
       "description": "Moderate rainfall with road status still unknown.",
       "rainfall_mm": 32,
-      "road_status": "unknown"
+      "road_status": "unknown",
+      "road_reports": [],
+      "critical_infrastructure": false,
+      "out_of_scope": false,
+      "evidence_stale": false,
+      "source_unavailable": false
     },
-    "expected_priority": "MEDIUM",
-    "expected_escalation": true
+    "expected_priority": "INSUFFICIENT_EVIDENCE",
+    "expected_escalation": true,
+    "expected_evidence_state": "MISSING"
   },
   {
     "scenario_id": "FLOOD-006",
@@ -66,10 +96,16 @@
       "location": "West Avenue",
       "description": "Moderate rainfall with road confirmed open.",
       "rainfall_mm": 30,
-      "road_status": "open"
+      "road_status": "open",
+      "road_reports": [],
+      "critical_infrastructure": false,
+      "out_of_scope": false,
+      "evidence_stale": false,
+      "source_unavailable": false
     },
     "expected_priority": "LOW",
-    "expected_escalation": false
+    "expected_escalation": false,
+    "expected_evidence_state": "COMPLETE"
   },
   {
     "scenario_id": "FLOOD-007",
@@ -78,10 +114,16 @@
       "location": "Hospital Access",
       "description": "Flooded access road reported near critical infrastructure.",
       "rainfall_mm": 18,
-      "road_status": "flooded"
+      "road_status": "flooded",
+      "road_reports": [],
+      "critical_infrastructure": true,
+      "out_of_scope": false,
+      "evidence_stale": false,
+      "source_unavailable": false
     },
     "expected_priority": "HIGH",
-    "expected_escalation": true
+    "expected_escalation": true,
+    "expected_evidence_state": "OVERLAPPING"
   },
   {
     "scenario_id": "FLOOD-008",
@@ -90,9 +132,237 @@
       "location": "South Boulevard",
       "description": "Heavy rainfall but road remains confirmed open.",
       "rainfall_mm": 55,
-      "road_status": "open"
+      "road_status": "open",
+      "road_reports": [],
+      "critical_infrastructure": false,
+      "out_of_scope": false,
+      "evidence_stale": false,
+      "source_unavailable": false
     },
     "expected_priority": "MEDIUM",
-    "expected_escalation": false
+    "expected_escalation": false,
+    "expected_evidence_state": "COMPLETE"
+  },
+  {
+    "scenario_id": "ADV-001",
+    "incident": {
+      "incident_id": "ADV-001",
+      "location": "East Underpass",
+      "description": "Heavy rainfall; road condition source unavailable.",
+      "rainfall_mm": 61,
+      "road_status": "unknown",
+      "road_reports": [],
+      "critical_infrastructure": false,
+      "out_of_scope": false,
+      "evidence_stale": false,
+      "source_unavailable": true
+    },
+    "expected_priority": "INSUFFICIENT_EVIDENCE",
+    "expected_escalation": true,
+    "expected_evidence_state": "MISSING"
+  },
+  {
+    "scenario_id": "ADV-002",
+    "incident": {
+      "incident_id": "ADV-002",
+      "location": "Bridge Street",
+      "description": "Two sources disagree about whether the road is open or flooded.",
+      "rainfall_mm": 44,
+      "road_status": "unknown",
+      "road_reports": [
+        "open",
+        "flooded"
+      ],
+      "critical_infrastructure": false,
+      "out_of_scope": false,
+      "evidence_stale": false,
+      "source_unavailable": false
+    },
+    "expected_priority": "UNRESOLVED",
+    "expected_escalation": true,
+    "expected_evidence_state": "CONTRADICTORY"
+  },
+  {
+    "scenario_id": "ADV-003",
+    "incident": {
+      "incident_id": "ADV-003",
+      "location": "Hospital Corridor",
+      "description": "Moderate rainfall; road open but hospital access may be affected.",
+      "rainfall_mm": 31,
+      "road_status": "open",
+      "road_reports": [],
+      "critical_infrastructure": true,
+      "out_of_scope": false,
+      "evidence_stale": false,
+      "source_unavailable": false
+    },
+    "expected_priority": "MEDIUM",
+    "expected_escalation": true,
+    "expected_evidence_state": "OVERLAPPING"
+  },
+  {
+    "scenario_id": "ADV-004",
+    "incident": {
+      "incident_id": "ADV-004",
+      "location": "Central District",
+      "description": "Report concerns a chemical spill rather than flooding.",
+      "rainfall_mm": 5,
+      "road_status": "open",
+      "road_reports": [],
+      "critical_infrastructure": false,
+      "out_of_scope": true,
+      "evidence_stale": false,
+      "source_unavailable": false
+    },
+    "expected_priority": "OUT_OF_SCOPE",
+    "expected_escalation": true,
+    "expected_evidence_state": "OUT_OF_SCOPE"
+  },
+  {
+    "scenario_id": "ADV-005",
+    "incident": {
+      "incident_id": "ADV-005",
+      "location": "Boundary Road",
+      "description": "Rainfall is exactly at the high-rain threshold; road open.",
+      "rainfall_mm": 50,
+      "road_status": "open",
+      "road_reports": [],
+      "critical_infrastructure": false,
+      "out_of_scope": false,
+      "evidence_stale": false,
+      "source_unavailable": false
+    },
+    "expected_priority": "MEDIUM",
+    "expected_escalation": false,
+    "expected_evidence_state": "COMPLETE"
+  },
+  {
+    "scenario_id": "ADV-006",
+    "incident": {
+      "incident_id": "ADV-006",
+      "location": "Boundary Lane",
+      "description": "Rainfall is exactly at the moderate threshold; road open.",
+      "rainfall_mm": 20,
+      "road_status": "open",
+      "road_reports": [],
+      "critical_infrastructure": false,
+      "out_of_scope": false,
+      "evidence_stale": false,
+      "source_unavailable": false
+    },
+    "expected_priority": "LOW",
+    "expected_escalation": false,
+    "expected_evidence_state": "COMPLETE"
+  },
+  {
+    "scenario_id": "ADV-007",
+    "incident": {
+      "incident_id": "ADV-007",
+      "location": "Old Mill Road",
+      "description": "Flood evidence is stale and cannot support a current classification.",
+      "rainfall_mm": 46,
+      "road_status": "flooded",
+      "road_reports": [],
+      "critical_infrastructure": false,
+      "out_of_scope": false,
+      "evidence_stale": true,
+      "source_unavailable": false
+    },
+    "expected_priority": "INSUFFICIENT_EVIDENCE",
+    "expected_escalation": true,
+    "expected_evidence_state": "MISSING"
+  },
+  {
+    "scenario_id": "ADV-008",
+    "incident": {
+      "incident_id": "ADV-008",
+      "location": "South Tunnel",
+      "description": "Structured field says open, but an independent source says closed.",
+      "rainfall_mm": 36,
+      "road_status": "open",
+      "road_reports": [
+        "open",
+        "closed"
+      ],
+      "critical_infrastructure": false,
+      "out_of_scope": false,
+      "evidence_stale": false,
+      "source_unavailable": false
+    },
+    "expected_priority": "UNRESOLVED",
+    "expected_escalation": true,
+    "expected_evidence_state": "CONTRADICTORY"
+  },
+  {
+    "scenario_id": "ADV-009",
+    "incident": {
+      "incident_id": "ADV-009",
+      "location": "School Access",
+      "description": "Road open, but a critical school access route may be affected.",
+      "rainfall_mm": 27,
+      "road_status": "open",
+      "road_reports": [],
+      "critical_infrastructure": true,
+      "out_of_scope": false,
+      "evidence_stale": false,
+      "source_unavailable": false
+    },
+    "expected_priority": "MEDIUM",
+    "expected_escalation": true,
+    "expected_evidence_state": "OVERLAPPING"
+  },
+  {
+    "scenario_id": "ADV-010",
+    "incident": {
+      "incident_id": "ADV-010",
+      "location": "",
+      "description": "Heavy rainfall report has no usable location.",
+      "rainfall_mm": 70,
+      "road_status": "unknown",
+      "road_reports": [],
+      "critical_infrastructure": false,
+      "out_of_scope": false,
+      "evidence_stale": false,
+      "source_unavailable": false
+    },
+    "expected_priority": "INSUFFICIENT_EVIDENCE",
+    "expected_escalation": true,
+    "expected_evidence_state": "MISSING"
+  },
+  {
+    "scenario_id": "ADV-011",
+    "incident": {
+      "incident_id": "ADV-011",
+      "location": "Unknown Site",
+      "description": "Incident report contains no reliable rainfall observation.",
+      "rainfall_mm": null,
+      "road_status": "unknown",
+      "road_reports": [],
+      "critical_infrastructure": false,
+      "out_of_scope": false,
+      "evidence_stale": false,
+      "source_unavailable": false
+    },
+    "expected_priority": "INSUFFICIENT_EVIDENCE",
+    "expected_escalation": true,
+    "expected_evidence_state": "MISSING"
+  },
+  {
+    "scenario_id": "ADV-012",
+    "incident": {
+      "incident_id": "ADV-012",
+      "location": "Industrial Avenue",
+      "description": "Available reports are too incomplete to assign an operational priority.",
+      "rainfall_mm": null,
+      "road_status": "unknown",
+      "road_reports": [],
+      "critical_infrastructure": false,
+      "out_of_scope": false,
+      "evidence_stale": false,
+      "source_unavailable": true
+    },
+    "expected_priority": "INSUFFICIENT_EVIDENCE",
+    "expected_escalation": true,
+    "expected_evidence_state": "MISSING"
   }
 ]
