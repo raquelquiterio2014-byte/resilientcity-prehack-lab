@@ -1,0 +1,41 @@
+{
+  "case_id": "FIELD-GIROUSSENS-001",
+  "title": "Giroussens field challenge — partner documentation pending",
+  "location": "Giroussens, France",
+  "event_time": null,
+  "evidence_cutoff": "2026-01-01T10:00:00Z",
+  "context": {
+    "antecedent_dry_days": 16,
+    "soil_saturation_pct": null,
+    "impervious_surface_pct": 85,
+    "drainage_status": "clogged",
+    "methodology_notes": [
+      "Values are partner-supplied challenge inputs until independently documented.",
+      "Experimental thresholds are guardrails, not calibrated flood probabilities."
+    ]
+  },
+  "evidence": [
+    {
+      "evidence_id": "E-WEATHER-001",
+      "claim": "Rainfall forecast reported as 25 mm.",
+      "source_type": "partner_field_case",
+      "source_id": null,
+      "observed_at": "2026-01-01T09:00:00Z",
+      "retrieved_at": "2026-01-01T09:05:00Z",
+      "source_quality": "UNKNOWN",
+      "freshness": "CURRENT",
+      "verification": "UNVERIFIED",
+      "location": "Giroussens, France",
+      "structured_data": {"rainfall_mm": 25},
+      "notes": "Source documentation to be attached by field partner."
+    }
+  ],
+  "later_outcome": {
+    "summary": "Partner reports flooding occurred rapidly; independent documentation pending.",
+    "documented_at": null,
+    "reference_ids": [],
+    "independent_label": null,
+    "reviewer_notes": "Evaluator-only. Must not be included in LLM input."
+  },
+  "partner_notes": "Template challenge case; not yet an independently verified historical benchmark."
+}
