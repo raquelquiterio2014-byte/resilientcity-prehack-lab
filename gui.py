@@ -4,6 +4,7 @@ from pathlib import Path
 from pydantic import ValidationError
 from resilientcity.graph import build_graph
 from resilientcity.models import Incident
+from resilientcity.evaluation import evaluate_all
 
 BASE_DIR = Path(__file__).resolve().parent
 ASSET_DIR = BASE_DIR / "assets"
@@ -58,6 +59,7 @@ class ResilientCityGUI(tk.Tk):
         self.description.insert("1.0","Heavy rainfall and reported street flooding near an intersection.")
         buttons=tk.Frame(left,bg="#ffffff"); buttons.grid(row=10,column=0,sticky="ew",pady=(16,0))
         ttk.Button(buttons,text="Run Multi-Agent Analysis",command=self.run_analysis).pack(fill="x")
+        ttk.Button(buttons,text="Run Pilot Evaluation",command=self.run_evaluation).pack(fill="x",pady=(8,0))
         ttk.Button(buttons,text="Clear Results",command=self.clear_results).pack(fill="x",pady=(8,0))
         ops=self._load("operations_reference.png")
         if ops: tk.Label(left,image=ops,bg="#ffffff").grid(row=11,column=0,pady=(12,0))
@@ -66,9 +68,9 @@ class ResilientCityGUI(tk.Tk):
         summary=tk.Frame(right,bg="#ffffff"); summary.pack(fill="x")
         self.priority=self._metric(summary,"Priority",0); self.confidence=self._metric(summary,"Evidence Strength",1); self.safety=self._metric(summary,"Safety / Human Gate",2)
         nb=ttk.Notebook(right); nb.pack(fill="both",expand=True,pady=(14,0))
-        tabs=[tk.Frame(nb,bg="#ffffff") for _ in range(3)]
-        for tab,name in zip(tabs,["Explainable Report","Agent Trace","Shared State"]): nb.add(tab,text=name)
-        self.report=self._text(tabs[0]); self.trace=self._text(tabs[1]); self.state=self._text(tabs[2])
+        tabs=[tk.Frame(nb,bg="#ffffff") for _ in range(4)]
+        for tab,name in zip(tabs,["Explainable Report","Agent Trace","Shared State","Pilot Evaluation"]): nb.add(tab,text=name)
+        self.report=self._text(tabs[0]); self.trace=self._text(tabs[1]); self.state=self._text(tabs[2]); self.evaluation=self._text(tabs[3])
 
         agent=self._load("agent_reference.png")
         if agent: tk.Label(visual,image=agent,bg="#ffffff").pack(anchor="n")
@@ -94,9 +96,56 @@ class ResilientCityGUI(tk.Tk):
         d=r.get("decision",{}); s=r.get("safety",{}); self.priority.config(text=d.get("priority","—")); e=r.get("evidence",{}); score=e.get("evidence_score"); label=e.get("score_label","—"); self.confidence.config(text=f"{label} — {score}/100\nRule-based, not probability" if isinstance(score,(int,float)) else "—"); self.safety.config(text=s.get("status","—"))
         self._replace(self.report,r.get("final_report","No report generated.")); self._replace(self.trace,"\n".join(f"{n+1:02d}. {x}" for n,x in enumerate(r.get("trace",[]))))
         self._replace(self.state,"\n".join(f"[{k.upper()}]\n{r[k]}\n" for k in ("incident","evidence","risk","decision","critic","safety","revision_count") if k in r))
+    def run_evaluation(self):
+        try:
+            results, metrics = evaluate_all()
+        except Exception as e:
+            messagebox.showerror("Evaluation error", f"The supervised pilot evaluation could not run:\n\n{e}")
+            return
+
+        lines = [
+            "SUPERVISED PILOT EVALUATION",
+            "=" * 56,
+            f"Scenarios evaluated       : {metrics['scenarios']}",
+            f"Decision agreement        : {metrics['decision_agreement']:.0%}",
+            f"Manual baseline agreement : {metrics['baseline_agreement']:.0%}",
+            f"Evidence traceability     : {metrics['evidence_traceability']:.0%}",
+            f"Missed escalations        : {metrics['missed_escalations']}",
+            f"Unnecessary escalations   : {metrics['unnecessary_escalations']}",
+            f"Average review time       : {metrics['avg_review_time_ms']:.2f} ms",
+            f"Reproducibility           : {metrics['reproducibility']:.0%}",
+            "",
+            "SCENARIO RESULTS",
+            "-" * 56,
+        ]
+        for result in results:
+            escalation = "HUMAN" if result.predicted_escalation else "NO ESCALATION"
+            lines.extend([
+                f"{result.scenario_id}: expected={result.expected_priority} | "
+                f"multi-agent={result.predicted_priority} | baseline={result.baseline_priority}",
+                f"  escalation={escalation} | traceability={result.evidence_traceability:.0%} | "
+                f"reproducible={'YES' if result.reproducible else 'NO'}",
+            ])
+
+        lines.extend([
+            "",
+            "Interpretation",
+            "-" * 56,
+            "Decision Agreement compares the multi-agent priority with the labelled expected result.",
+            "Baseline Agreement compares a simple deterministic manual rule with the same expected result.",
+            "Evidence Traceability checks whether key evidence fields are preserved.",
+            "Missed Escalations are safety-critical cases that should have reached a human but did not.",
+            "Unnecessary Escalations are cases sent to a human when the labelled scenario did not require it.",
+            "Reproducibility checks whether repeated deterministic runs return the same core decision.",
+            "",
+            "NOTE: These are synthetic labelled scenarios for a supervised learning/evaluation lab.",
+            "They are not a validated emergency-response benchmark or production pilot.",
+        ])
+        self._replace(self.evaluation, "\n".join(lines))
+
     def clear_results(self):
         for x in (self.priority,self.confidence,self.safety): x.config(text="—")
-        for x in (self.report,self.trace,self.state): self._replace(x,"")
+        for x in (self.report,self.trace,self.state,self.evaluation): self._replace(x,"")
 
 if __name__=="__main__":
     ResilientCityGUI().mainloop()
