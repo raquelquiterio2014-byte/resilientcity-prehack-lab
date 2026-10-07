@@ -1,151 +1,320 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from pathlib import Path
 from pydantic import ValidationError
+
 from resilientcity.graph import build_graph
 from resilientcity.models import Incident
 from resilientcity.evaluation import evaluate_all
 
-BASE_DIR = Path(__file__).resolve().parent
-ASSET_DIR = BASE_DIR / "assets"
 
 class ResilientCityGUI(tk.Tk):
+    NAVY = "#071a2b"
+    BLUE = "#0b3558"
+    LIGHT = "#eaf2f7"
+    CARD = "#ffffff"
+    SOFT = "#f5f9fc"
+    TEXT = "#17354d"
+    MUTED = "#60798c"
+
     def __init__(self):
         super().__init__()
-        self.title("ResilientCity AI — V3 Pre-Hackathon Multi-Agent Lab")
-        self.geometry("1380x900")
-        self.minsize(1180,760)
-        self.configure(bg="#071a2b")
-        self.images={}
-        self.app=build_graph()
+        self.title("ResilientCity AI — V3 | PyCharm Local Demo")
+        self.geometry("1440x900")
+        self.minsize(1180, 760)
+        self.configure(bg=self.NAVY)
+        self.app = build_graph()
         self._style()
-        self._ui()
+        self._build_ui()
 
     def _style(self):
-        s=ttk.Style(self)
-        try: s.theme_use("clam")
-        except tk.TclError: pass
-        s.configure("Card.TLabelframe",background="#ffffff",relief="solid",borderwidth=1)
-        s.configure("Card.TLabelframe.Label",font=("Segoe UI",11,"bold"),foreground="#0b3558",background="#ffffff")
-        s.configure("TLabel",font=("Segoe UI",10))
-        s.configure("TButton",font=("Segoe UI",10,"bold"),padding=8)
+        style = ttk.Style(self)
+        try:
+            style.theme_use("clam")
+        except tk.TclError:
+            pass
+        style.configure("Card.TLabelframe", background=self.CARD)
+        style.configure("Card.TLabelframe.Label", background=self.CARD, foreground=self.BLUE,
+                        font=("Segoe UI", 11, "bold"))
+        style.configure("TButton", font=("Segoe UI", 10, "bold"), padding=8)
+        style.configure("TLabel", font=("Segoe UI", 10))
 
-    def _load(self,name):
-        p=ASSET_DIR/name
-        if not p.exists(): return None
-        im=tk.PhotoImage(file=str(p)); self.images[name]=im; return im
+    def _build_ui(self):
+        header = tk.Frame(self, bg=self.NAVY)
+        header.pack(fill="x", padx=24, pady=(14, 10))
+        tk.Label(header, text="ResilientCity AI — V3", bg=self.NAVY, fg="white",
+                 font=("Segoe UI", 25, "bold")).pack(anchor="w")
+        tk.Label(header, text="Explainable Multi-Agent System for Urban Flood Incident Response",
+                 bg=self.NAVY, fg="#47c7ff", font=("Segoe UI", 11, "bold")).pack(anchor="w")
+        tk.Label(header,
+                 text="Incident → Planner → Evidence → Risk → Decision → Critic/Revision → Safety → Human Gate → Reporter",
+                 bg=self.NAVY, fg="#c8d9e8", font=("Segoe UI", 9)).pack(anchor="w", pady=(5, 0))
 
-    def _ui(self):
-        header=tk.Frame(self,bg="#071a2b"); header.pack(fill="x",padx=18,pady=(12,8))
-        hero=self._load("resilientcity_hero.png")
-        if hero: tk.Label(header,image=hero,bg="#071a2b").pack(side="left")
-        title=tk.Frame(header,bg="#071a2b"); title.pack(side="left",fill="both",expand=True,padx=18)
-        tk.Label(title,text="ResilientCity AI — V3",bg="#071a2b",fg="white",font=("Segoe UI",25,"bold")).pack(anchor="w",pady=(14,0))
-        tk.Label(title,text="Explainable Multi-Agent System for Urban Flood Incident Response",bg="#071a2b",fg="#47c7ff",font=("Segoe UI",11,"bold")).pack(anchor="w",pady=(4,8))
-        tk.Label(title,text="Planner • Evidence • Risk • Decision • Critic • Safety • Reporter",bg="#071a2b",fg="#c8d9e8",font=("Segoe UI",9)).pack(anchor="w")
+        body = tk.Frame(self, bg=self.LIGHT)
+        body.pack(fill="both", expand=True, padx=24, pady=(0, 10))
+        body.grid_columnconfigure(0, weight=1)
+        body.grid_columnconfigure(1, weight=3)
+        body.grid_rowconfigure(0, weight=1)
 
-        main=tk.Frame(self,bg="#eaf2f7"); main.pack(fill="both",expand=True,padx=24,pady=10)
-        main.grid_columnconfigure(0,weight=1); main.grid_columnconfigure(1,weight=2); main.grid_columnconfigure(2,weight=1); main.grid_rowconfigure(0,weight=1)
-        left=ttk.LabelFrame(main,text="Incident Input",style="Card.TLabelframe",padding=16); left.grid(row=0,column=0,sticky="nsew",padx=(0,10))
-        right=ttk.LabelFrame(main,text="Multi-Agent Analysis",style="Card.TLabelframe",padding=16); right.grid(row=0,column=1,sticky="nsew",padx=10)
-        visual=ttk.LabelFrame(main,text="Agent Architecture",style="Card.TLabelframe",padding=10); visual.grid(row=0,column=2,sticky="nsew")
+        left = ttk.LabelFrame(body, text="Incident", style="Card.TLabelframe", padding=16)
+        left.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
+        right = ttk.LabelFrame(body, text="Multi-Agent Analysis", style="Card.TLabelframe", padding=14)
+        right.grid(row=0, column=1, sticky="nsew")
 
-        self.incident_id=tk.StringVar(value="LAB-001"); self.location=tk.StringVar(value="Central Avenue"); self.rainfall=tk.StringVar(value="72.0"); self.road_status=tk.StringVar(value="unknown")
-        self._field(left,"Incident ID",self.incident_id,0); self._field(left,"Location",self.location,1); self._field(left,"Rainfall (mm)",self.rainfall,2)
-        ttk.Label(left,text="Road status").grid(row=6,column=0,sticky="w",pady=(10,4))
-        ttk.Combobox(left,textvariable=self.road_status,values=["unknown","open","closed","flooded"],state="readonly").grid(row=7,column=0,sticky="ew")
-        ttk.Label(left,text="Incident description").grid(row=8,column=0,sticky="w",pady=(12,4))
-        self.description=tk.Text(left,height=7,wrap="word",font=("Segoe UI",10)); self.description.grid(row=9,column=0,sticky="nsew")
-        self.description.insert("1.0","Heavy rainfall and reported street flooding near an intersection.")
-        buttons=tk.Frame(left,bg="#ffffff"); buttons.grid(row=10,column=0,sticky="ew",pady=(16,0))
-        ttk.Button(buttons,text="Run Multi-Agent Analysis",command=self.run_analysis).pack(fill="x")
-        ttk.Button(buttons,text="Run Pilot Evaluation",command=self.run_evaluation).pack(fill="x",pady=(8,0))
-        ttk.Button(buttons,text="Clear Results",command=self.clear_results).pack(fill="x",pady=(8,0))
-        ops=self._load("operations_reference.png")
-        if ops: tk.Label(left,image=ops,bg="#ffffff").grid(row=11,column=0,pady=(12,0))
-        left.grid_columnconfigure(0,weight=1); left.grid_rowconfigure(9,weight=1)
+        self.incident_id = tk.StringVar(value="LAB-001")
+        self.location = tk.StringVar(value="Central Avenue")
+        self.rainfall = tk.StringVar(value="72.0")
+        self.road_status = tk.StringVar(value="unknown")
 
-        summary=tk.Frame(right,bg="#ffffff"); summary.pack(fill="x")
-        self.priority=self._metric(summary,"Priority",0); self.confidence=self._metric(summary,"Evidence Strength",1); self.safety=self._metric(summary,"Safety / Human Gate",2)
-        nb=ttk.Notebook(right); nb.pack(fill="both",expand=True,pady=(14,0))
-        tabs=[tk.Frame(nb,bg="#ffffff") for _ in range(4)]
-        for tab,name in zip(tabs,["Explainable Report","Agent Trace","Shared State","Pilot Evaluation"]): nb.add(tab,text=name)
-        self.report=self._text(tabs[0]); self.trace=self._text(tabs[1]); self.state=self._text(tabs[2]); self.evaluation=self._text(tabs[3])
+        self._field(left, "Incident ID", self.incident_id, 0)
+        self._field(left, "Location", self.location, 2)
+        self._field(left, "Rainfall (mm)", self.rainfall, 4)
+        ttk.Label(left, text="Road status").grid(row=6, column=0, sticky="w", pady=(10, 4))
+        ttk.Combobox(left, textvariable=self.road_status,
+                     values=["unknown", "open", "closed", "flooded"],
+                     state="readonly").grid(row=7, column=0, sticky="ew")
+        ttk.Label(left, text="Incident description").grid(row=8, column=0, sticky="w", pady=(12, 4))
+        self.description = tk.Text(left, height=7, wrap="word", font=("Segoe UI", 10))
+        self.description.grid(row=9, column=0, sticky="nsew")
+        self.description.insert("1.0", "Heavy rainfall and reported street flooding near an intersection.")
 
-        agent=self._load("agent_reference.png")
-        if agent: tk.Label(visual,image=agent,bg="#ffffff").pack(anchor="n")
-        tk.Label(visual,text="Operational lab flow",bg="#ffffff",fg="#0b3558",font=("Segoe UI",10,"bold")).pack(anchor="w",pady=(10,3))
-        tk.Label(visual,text="Planner → Evidence → Risk → Decision → Critic\n↳ Revision when evidence is insufficient\n→ Safety → Reporter → Human decision",bg="#ffffff",fg="#49657a",font=("Segoe UI",9),justify="left",wraplength=250).pack(anchor="w")
-        tk.Label(self,text="AI recommends. AI explains. Humans decide. | Educational pre-hackathon lab — no autonomous emergency actions.",bg="#0b3558",fg="white",font=("Segoe UI",9),pady=8).pack(fill="x",side="bottom")
+        ttk.Button(left, text="Run Multi-Agent Analysis",
+                   command=self.run_analysis).grid(row=10, column=0, sticky="ew", pady=(14, 4))
+        ttk.Button(left, text="Run Pilot Evaluation",
+                   command=self.run_evaluation).grid(row=11, column=0, sticky="ew", pady=4)
+        ttk.Button(left, text="Clear Results",
+                   command=self.clear_results).grid(row=12, column=0, sticky="ew", pady=4)
 
-    def _field(self,p,label,var,row):
-        ttk.Label(p,text=label).grid(row=row*2,column=0,sticky="w",pady=(8 if row else 0,4)); ttk.Entry(p,textvariable=var).grid(row=row*2+1,column=0,sticky="ew")
-    def _metric(self,p,label,col):
-        c=tk.Frame(p,bg="#f5f9fc",highlightbackground="#cbd9e4",highlightthickness=1); c.grid(row=0,column=col,sticky="nsew",padx=(0 if col==0 else 6,0)); p.grid_columnconfigure(col,weight=1)
-        tk.Label(c,text=label,bg="#f5f9fc",fg="#49657a",font=("Segoe UI",9)).pack(anchor="w",padx=10,pady=(8,2)); v=tk.Label(c,text="—",bg="#f5f9fc",fg="#0b3558",font=("Segoe UI",12,"bold"),wraplength=190,justify="left"); v.pack(anchor="w",padx=10,pady=(0,8)); return v
-    def _text(self,p):
-        t=tk.Text(p,wrap="word",font=("Consolas",10),bg="#fbfdff",relief="flat",padx=12,pady=12); s=ttk.Scrollbar(p,orient="vertical",command=t.yview); t.configure(yscrollcommand=s.set); t.pack(side="left",fill="both",expand=True); s.pack(side="right",fill="y"); return t
-    def _replace(self,w,v): w.delete("1.0","end"); w.insert("1.0",v)
+        tk.Label(left, text="AI recommends. AI explains.\nHumans decide.",
+                 bg=self.CARD, fg=self.BLUE, font=("Segoe UI", 11, "bold"),
+                 justify="left").grid(row=13, column=0, sticky="w", pady=(18, 4))
+        tk.Label(left, text="Educational pre-hackathon lab.\nNo autonomous emergency actions.",
+                 bg=self.CARD, fg=self.MUTED, font=("Segoe UI", 9),
+                 justify="left").grid(row=14, column=0, sticky="w")
+        left.grid_columnconfigure(0, weight=1)
+        left.grid_rowconfigure(9, weight=1)
+
+        summary = tk.Frame(right, bg=self.CARD)
+        summary.pack(fill="x")
+        self.priority = self._summary_card(summary, "Priority", 0)
+        self.evidence_strength = self._summary_card(summary, "Evidence Strength", 1)
+        self.safety = self._summary_card(summary, "Safety / Human Gate", 2)
+
+        self.notebook = ttk.Notebook(right)
+        self.notebook.pack(fill="both", expand=True, pady=(12, 0))
+
+        report_tab = tk.Frame(self.notebook, bg=self.CARD)
+        trace_tab = tk.Frame(self.notebook, bg=self.CARD)
+        state_tab = tk.Frame(self.notebook, bg=self.CARD)
+        evaluation_tab = tk.Frame(self.notebook, bg=self.CARD)
+
+        self.notebook.add(report_tab, text="Explainable Report")
+        self.notebook.add(trace_tab, text="Agent Trace")
+        self.notebook.add(state_tab, text="Shared State")
+        self.notebook.add(evaluation_tab, text="Pilot Evaluation")
+
+        self.report_text = self._text_area(report_tab)
+        self.trace_text = self._text_area(trace_tab)
+        self.state_text = self._text_area(state_tab)
+        self._build_evaluation_dashboard(evaluation_tab)
+
+        footer = tk.Label(
+            self,
+            text="V3 local PyCharm demo | Evidence Strength is rule-based and is not a calibrated probability.",
+            bg=self.BLUE, fg="white", font=("Segoe UI", 9), pady=7
+        )
+        footer.pack(fill="x", side="bottom")
+
+    def _field(self, parent, label, variable, row):
+        ttk.Label(parent, text=label).grid(row=row, column=0, sticky="w", pady=(8, 4))
+        ttk.Entry(parent, textvariable=variable).grid(row=row + 1, column=0, sticky="ew")
+
+    def _summary_card(self, parent, title, column):
+        card = tk.Frame(parent, bg=self.SOFT, highlightbackground="#cbd9e4", highlightthickness=1)
+        card.grid(row=0, column=column, sticky="nsew", padx=4)
+        parent.grid_columnconfigure(column, weight=1)
+        tk.Label(card, text=title, bg=self.SOFT, fg=self.MUTED,
+                 font=("Segoe UI", 9)).pack(anchor="w", padx=10, pady=(8, 2))
+        value = tk.Label(card, text="—", bg=self.SOFT, fg=self.BLUE,
+                         font=("Segoe UI", 12, "bold"), wraplength=230, justify="left")
+        value.pack(anchor="w", padx=10, pady=(0, 9))
+        return value
+
+    def _text_area(self, parent):
+        frame = tk.Frame(parent, bg=self.CARD)
+        frame.pack(fill="both", expand=True)
+        text = tk.Text(frame, wrap="word", font=("Consolas", 10),
+                       bg="#fbfdff", relief="flat", padx=12, pady=12)
+        scroll = ttk.Scrollbar(frame, orient="vertical", command=text.yview)
+        text.configure(yscrollcommand=scroll.set)
+        text.pack(side="left", fill="both", expand=True)
+        scroll.pack(side="right", fill="y")
+        return text
+
+    def _build_evaluation_dashboard(self, parent):
+        intro = tk.Frame(parent, bg=self.CARD)
+        intro.pack(fill="x", padx=8, pady=(8, 4))
+        tk.Label(intro, text="Supervised Pilot Evaluation", bg=self.CARD, fg=self.BLUE,
+                 font=("Segoe UI", 14, "bold")).pack(anchor="w")
+        self.eval_statement = tk.Label(
+            intro,
+            text="Click “Run Pilot Evaluation” to evaluate the labelled synthetic scenarios.",
+            bg=self.CARD, fg=self.MUTED, font=("Segoe UI", 10), justify="left"
+        )
+        self.eval_statement.pack(anchor="w", pady=(3, 8))
+
+        cards = tk.Frame(parent, bg=self.CARD)
+        cards.pack(fill="x", padx=6)
+        for c in range(5):
+            cards.grid_columnconfigure(c, weight=1)
+
+        self.eval_decision = self._eval_card(cards, "Decision Agreement", 0)
+        self.eval_baseline = self._eval_card(cards, "Manual Baseline", 1)
+        self.eval_traceability = self._eval_card(cards, "Evidence Traceability", 2)
+        self.eval_escalations = self._eval_card(cards, "Escalations", 3)
+        self.eval_repro = self._eval_card(cards, "Reproducibility", 4)
+
+        meta = tk.Frame(parent, bg=self.CARD)
+        meta.pack(fill="x", padx=8, pady=(8, 5))
+        self.eval_execution_time = tk.Label(
+            meta, text="Average Workflow Execution Time: —",
+            bg=self.CARD, fg=self.TEXT, font=("Segoe UI", 10, "bold")
+        )
+        self.eval_execution_time.pack(side="left")
+        self.eval_scenarios = tk.Label(
+            meta, text="Scenarios: —", bg=self.CARD, fg=self.TEXT, font=("Segoe UI", 10)
+        )
+        self.eval_scenarios.pack(side="right")
+
+        tk.Label(parent, text="Scenario Results", bg=self.CARD, fg=self.BLUE,
+                 font=("Segoe UI", 11, "bold")).pack(anchor="w", padx=8, pady=(5, 3))
+        self.eval_results = self._text_area(parent)
+
+    def _eval_card(self, parent, title, column):
+        card = tk.Frame(parent, bg=self.SOFT, highlightbackground="#cbd9e4", highlightthickness=1)
+        card.grid(row=0, column=column, sticky="nsew", padx=3)
+        tk.Label(card, text=title, bg=self.SOFT, fg=self.MUTED,
+                 font=("Segoe UI", 8)).pack(anchor="w", padx=8, pady=(7, 2))
+        value = tk.Label(card, text="—", bg=self.SOFT, fg=self.BLUE,
+                         font=("Segoe UI", 11, "bold"), justify="left", wraplength=155)
+        value.pack(anchor="w", padx=8, pady=(0, 8))
+        return value
+
+    def _replace(self, widget, value):
+        widget.delete("1.0", "end")
+        widget.insert("1.0", value)
 
     def run_analysis(self):
         try:
-            i=Incident(incident_id=self.incident_id.get().strip(),location=self.location.get().strip(),description=self.description.get("1.0","end").strip(),rainfall_mm=float(self.rainfall.get()),road_status=self.road_status.get())
-            r=self.app.invoke({"incident":i.model_dump(),"revision_count":0,"trace":[]})
-        except (ValidationError,ValueError) as e: messagebox.showerror("Invalid incident data",str(e)); return
-        except Exception as e: messagebox.showerror("Execution error",f"The multi-agent workflow could not run:\n\n{e}"); return
-        d=r.get("decision",{}); s=r.get("safety",{}); self.priority.config(text=d.get("priority","—")); e=r.get("evidence",{}); score=e.get("evidence_score"); label=e.get("score_label","—"); self.confidence.config(text=f"{label} — {score}/100\nRule-based, not probability" if isinstance(score,(int,float)) else "—"); self.safety.config(text=s.get("status","—"))
-        self._replace(self.report,r.get("final_report","No report generated.")); self._replace(self.trace,"\n".join(f"{n+1:02d}. {x}" for n,x in enumerate(r.get("trace",[]))))
-        self._replace(self.state,"\n".join(f"[{k.upper()}]\n{r[k]}\n" for k in ("incident","evidence","risk","decision","critic","safety","revision_count") if k in r))
+            incident = Incident(
+                incident_id=self.incident_id.get().strip(),
+                location=self.location.get().strip(),
+                description=self.description.get("1.0", "end").strip(),
+                rainfall_mm=float(self.rainfall.get()),
+                road_status=self.road_status.get(),
+            )
+            result = self.app.invoke({
+                "incident": incident.model_dump(),
+                "revision_count": 0,
+                "trace": [],
+            })
+        except (ValidationError, ValueError) as exc:
+            messagebox.showerror("Invalid incident data", str(exc))
+            return
+        except Exception as exc:
+            messagebox.showerror("Execution error", f"The multi-agent workflow could not run:\n\n{exc}")
+            return
+
+        decision = result.get("decision", {})
+        evidence = result.get("evidence", {})
+        safety = result.get("safety", {})
+
+        self.priority.config(text=decision.get("priority", "—"))
+        score = evidence.get("evidence_score")
+        label = evidence.get("score_label", "—")
+        self.evidence_strength.config(
+            text=f"{label} — {score}/100\nRule-based, not probability"
+            if isinstance(score, (int, float)) else "—"
+        )
+        self.safety.config(text=safety.get("status", "—"))
+
+        self._replace(self.report_text, result.get("final_report", ""))
+        self._replace(
+            self.trace_text,
+            "\n".join(f"{index:02d}. {event}"
+                      for index, event in enumerate(result.get("trace", []), start=1))
+        )
+        state_lines = []
+        for key in ("incident", "evidence", "risk", "decision", "critic", "safety", "revision_count"):
+            if key in result:
+                state_lines.append(f"[{key.upper()}]\n{result[key]}\n")
+        self._replace(self.state_text, "\n".join(state_lines))
+
     def run_evaluation(self):
         try:
             results, metrics = evaluate_all()
-        except Exception as e:
-            messagebox.showerror("Evaluation error", f"The supervised pilot evaluation could not run:\n\n{e}")
+        except Exception as exc:
+            messagebox.showerror(
+                "Evaluation error",
+                f"The supervised pilot evaluation could not run:\n\n{exc}"
+            )
             return
 
-        lines = [
-            "SUPERVISED PILOT EVALUATION",
-            "=" * 56,
-            f"Scenarios evaluated       : {metrics['scenarios']}",
-            f"Decision agreement        : {metrics['decision_agreement']:.0%}",
-            f"Manual baseline agreement : {metrics['baseline_agreement']:.0%}",
-            f"Evidence traceability     : {metrics['evidence_traceability']:.0%}",
-            f"Missed escalations        : {metrics['missed_escalations']}",
-            f"Unnecessary escalations   : {metrics['unnecessary_escalations']}",
-            f"Average review time       : {metrics['avg_review_time_ms']:.2f} ms",
-            f"Reproducibility           : {metrics['reproducibility']:.0%}",
-            "",
-            "SCENARIO RESULTS",
-            "-" * 56,
-        ]
+        matched = sum(1 for result in results if result.decision_agreement)
+        total = metrics["scenarios"]
+
+        self.eval_statement.config(
+            text=f"Initial supervised evaluation: {matched}/{total} labelled synthetic scenarios "
+                 "matched the expected decision.\n"
+                 "This is an initial synthetic evaluation — not a claim of real-world accuracy."
+        )
+        self.eval_decision.config(text=f"{matched}/{total}\n({metrics['decision_agreement']:.0%})")
+        self.eval_baseline.config(text=f"{metrics['baseline_agreement']:.0%}")
+        self.eval_traceability.config(text=f"{metrics['evidence_traceability']:.0%}")
+        self.eval_escalations.config(
+            text=f"Missed: {metrics['missed_escalations']}\n"
+                 f"Unnecessary: {metrics['unnecessary_escalations']}"
+        )
+        self.eval_repro.config(text=f"{metrics['reproducibility']:.0%}")
+        self.eval_execution_time.config(
+            text=f"Average Workflow Execution Time: {metrics['avg_review_time_ms']:.2f} ms"
+        )
+        self.eval_scenarios.config(text=f"Scenarios: {total}")
+
+        lines = []
         for result in results:
-            escalation = "HUMAN" if result.predicted_escalation else "NO ESCALATION"
-            lines.extend([
-                f"{result.scenario_id}: expected={result.expected_priority} | "
-                f"multi-agent={result.predicted_priority} | baseline={result.baseline_priority}",
-                f"  escalation={escalation} | traceability={result.evidence_traceability:.0%} | "
-                f"reproducible={'YES' if result.reproducible else 'NO'}",
-            ])
+            agreement = "MATCH" if result.decision_agreement else "DIFFERENT"
+            escalation = "HUMAN REVIEW" if result.predicted_escalation else "NO ESCALATION"
+            lines.append(
+                f"{result.scenario_id} | expected={result.expected_priority} | "
+                f"multi-agent={result.predicted_priority} | baseline={result.baseline_priority} | {agreement}\n"
+                f"    escalation={escalation} | traceability={result.evidence_traceability:.0%} | "
+                f"reproducible={'YES' if result.reproducible else 'NO'}"
+            )
 
         lines.extend([
             "",
-            "Interpretation",
-            "-" * 56,
-            "Decision Agreement compares the multi-agent priority with the labelled expected result.",
-            "Baseline Agreement compares a simple deterministic manual rule with the same expected result.",
-            "Evidence Traceability checks whether key evidence fields are preserved.",
-            "Missed Escalations are safety-critical cases that should have reached a human but did not.",
-            "Unnecessary Escalations are cases sent to a human when the labelled scenario did not require it.",
-            "Reproducibility checks whether repeated deterministic runs return the same core decision.",
-            "",
-            "NOTE: These are synthetic labelled scenarios for a supervised learning/evaluation lab.",
-            "They are not a validated emergency-response benchmark or production pilot.",
+            "Methodological note:",
+            "The scenarios are labelled synthetic cases created for supervised evaluation of the lab workflow.",
+            "A perfect result on this small set does not establish 100% real-world accuracy.",
+            "The timing above measures workflow execution time, not human review time.",
         ])
-        self._replace(self.evaluation, "\n".join(lines))
+        self._replace(self.eval_results, "\n\n".join(lines))
+        self.notebook.select(3)
 
     def clear_results(self):
-        for x in (self.priority,self.confidence,self.safety): x.config(text="—")
-        for x in (self.report,self.trace,self.state,self.evaluation): self._replace(x,"")
+        for label in (self.priority, self.evidence_strength, self.safety):
+            label.config(text="—")
+        for text in (self.report_text, self.trace_text, self.state_text, self.eval_results):
+            self._replace(text, "")
+        for label in (self.eval_decision, self.eval_baseline, self.eval_traceability,
+                      self.eval_escalations, self.eval_repro):
+            label.config(text="—")
+        self.eval_execution_time.config(text="Average Workflow Execution Time: —")
+        self.eval_scenarios.config(text="Scenarios: —")
+        self.eval_statement.config(
+            text="Click “Run Pilot Evaluation” to evaluate the labelled synthetic scenarios."
+        )
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     ResilientCityGUI().mainloop()
