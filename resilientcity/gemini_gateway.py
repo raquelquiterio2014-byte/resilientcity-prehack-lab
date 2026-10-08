@@ -1,4 +1,4 @@
-"""Gemini 2.5 Flash gateway for V5 Experimental.
+"""Gemini 2.5 Flash gateway for V6 Final Pre-Hackathon Research Prototype.
 
 The gateway is deliberately optional. If the API key is absent, the call fails,
 quota is exhausted, or structured validation fails after bounded retries, the
