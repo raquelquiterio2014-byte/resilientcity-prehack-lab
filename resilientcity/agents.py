@@ -1,4 +1,4 @@
-from .models import Incident, EvidenceAssessment, RiskAssessment, DecisionProposal, CriticReview, SafetyReview
+from .models import Incident, EvidenceAssessment, RiskAssessment, DecisionProposal, CriticReview, SafetyReview, HumanGateReview
 from .llm_agents import run_llm_evidence, run_llm_critic
 
 DRY_DAYS_EXPERIMENTAL_THRESHOLD = 15
@@ -21,8 +21,6 @@ def _vulnerability_flags(i: Incident) -> list[str]:
         flags.append("HIGH_IMPERVIOUS_SURFACE")
     if i.drainage_status in {"partially_blocked","clogged"}:
         flags.append("DRAINAGE_CONSTRAINT")
-    if i.terrain_slope_pct is not None: flags.append("TERRAIN_SLOPE_OBSERVED")
-    if i.land_use: flags.append("LAND_USE_CONTEXT_AVAILABLE")
     return flags
 
 def evidence_agent(state):
@@ -42,7 +40,7 @@ def evidence_agent(state):
     elif missing: state_name="MISSING"
     elif i.critical_infrastructure or contextual!="LOW": state_name="OVERLAPPING"
     else: state_name="COMPLETE"
-    score=max(0,100-25*len(set(missing))-35*len(conflicts)-(20 if i.evidence_stale else 0))
+    score=max(0,100-25*len(set(missing))-35*len(conflicts))
     label="STRONG" if score>=80 else "MODERATE" if score>=55 else "LOW"
     review=contextual!="LOW"
     e=EvidenceAssessment(state=state_name,weather_signal=weather,road_status=i.road_status,conflicts=conflicts,missing_fields=sorted(set(missing)),evidence_score=score,score_label=label,evidence_complete=not missing and not conflicts and not i.out_of_scope,contextual_uncertainty=contextual,vulnerability_flags=flags,human_review_trigger=review)
@@ -84,6 +82,9 @@ def decision_agent(state):
     else:
         p=r.level
         rec={"HIGH":"Escalate for human review and verify affected roads, terrain/drainage context, and critical infrastructure before action.","MEDIUM":"Request targeted verification of contextual vulnerability and present the recommendation for human review when uncertainty or impact is sensitive.","LOW":"Continue monitoring and document evidence; no high-impact action is recommended."}[p]
+    llm_evidence=state.get("llm_evidence") or {}
+    if llm_evidence.get("recommendation")=="ESCALATE" and p in {"LOW","MEDIUM"}:
+        rec += " LLM Evidence requested escalation; deterministic Safety/Human Gate must resolve this conservatively."
     d=DecisionProposal(priority=p,recommendation=rec,evidence_score=e.evidence_score)
     return {"decision":d.model_dump(),"trace":_trace(state,f"Decision: priority={p}; forced classification avoided={p in {'INSUFFICIENT_EVIDENCE','UNRESOLVED','OUT_OF_SCOPE'}}.")}
 
@@ -121,14 +122,26 @@ def revision_agent(state):
 
 def safety_agent(state):
     d=DecisionProposal.model_validate(state["decision"]); e=EvidenceAssessment.model_validate(state["evidence"])
+    critic=CriticReview.model_validate(state["critic"])
+    llm_evidence=state.get("llm_evidence") or {}
     if d.priority=="OUT_OF_SCOPE": x=SafetyReview(status="BLOCKED",reason="Outside validated scope; no operational recommendation is authorized.")
-    elif d.priority in {"INSUFFICIENT_EVIDENCE","UNRESOLVED","HIGH"} or e.state in {"MISSING","CONTRADICTORY","OVERLAPPING"} or e.human_review_trigger: x=SafetyReview(status="HUMAN_REVIEW_REQUIRED",reason="Uncertainty, conflict, contextual vulnerability, critical context, or high impact requires a person to decide.")
+    elif critic.status=="ESCALATE" or llm_evidence.get("recommendation")=="ESCALATE" or d.priority in {"INSUFFICIENT_EVIDENCE","UNRESOLVED","HIGH"} or e.state in {"MISSING","CONTRADICTORY","OVERLAPPING"} or e.human_review_trigger: x=SafetyReview(status="HUMAN_REVIEW_REQUIRED",reason="Uncertainty, conflict, contextual vulnerability, critical context, or high impact requires a person to decide.")
     elif d.priority=="LOW": x=SafetyReview(status="APPROVED",reason="Decision support may be shown; no autonomous action is authorized.")
     else: x=SafetyReview(status="APPROVED_WITH_LIMITATIONS",reason="Recommendation may be shown with limitations; no autonomous action is authorized.")
     return {"safety":x.model_dump(),"trace":_trace(state,f"Safety: {x.status}.")}
 
+def human_gate_agent(state):
+    s=SafetyReview.model_validate(state["safety"])
+    if s.status=="BLOCKED":
+        x=HumanGateReview(status="ROUTE_OUT_OF_SCOPE",reason="Automation is blocked; a human must route the case to an appropriate validated workflow.")
+    elif s.status=="HUMAN_REVIEW_REQUIRED":
+        x=HumanGateReview(status="REVIEW_REQUIRED",reason="A human decision is required before any operational action.")
+    else:
+        x=HumanGateReview(status="NO_ACTION_REQUIRED",reason="Decision support may be displayed; no autonomous operational action is authorized.")
+    return {"human_gate":x.model_dump(),"trace":_trace(state,f"Human Gate: {x.status}.")}
+
 def reporter_agent(state):
-    i=Incident.model_validate(state["incident"]); d=DecisionProposal.model_validate(state["decision"]); e=EvidenceAssessment.model_validate(state["evidence"]); s=SafetyReview.model_validate(state["safety"])
+    i=Incident.model_validate(state["incident"]); d=DecisionProposal.model_validate(state["decision"]); e=EvidenceAssessment.model_validate(state["evidence"]); s=SafetyReview.model_validate(state["safety"]); h=HumanGateReview.model_validate(state["human_gate"])
     mode=state.get("reasoning_mode","deterministic"); ls=state.get("llm_status",{})
-    report=(f"Reasoning mode: {mode}\nLLM Evidence source: {ls.get('evidence','n/a')}\nLLM Critic source: {ls.get('critic','n/a')}\nIncident {i.incident_id} — {i.location or '[location missing]'}\nDecision: {d.priority}\nEvidence state: {e.state}\nContextual uncertainty: {e.contextual_uncertainty}\nVulnerability flags: {', '.join(e.vulnerability_flags) or 'none'}\nRecommendation: {d.recommendation}\nEvidence strength: {e.score_label} ({e.evidence_score}/100)\nMissing: {', '.join(e.missing_fields) or 'none'}\nConflicts: {', '.join(e.conflicts) or 'none'}\nSafety: {s.status}\nLimitation: {s.reason}\n\nPhysical/contextual observations are evidence inputs, not calibrated flood probabilities. Thresholds remain experimental guardrails.\nWorkflow validation ≠ real-world readiness.\nA good outcome is not always a classification.\nPrinciple: AI recommends. AI explains. Humans decide.")
+    report=(f"Reasoning mode: {mode}\nLLM Evidence source: {ls.get('evidence','n/a')}\nLLM Critic source: {ls.get('critic','n/a')}\nIncident {i.incident_id} — {i.location or '[location missing]'}\nDecision: {d.priority}\nEvidence state: {e.state}\nContextual uncertainty: {e.contextual_uncertainty}\nVulnerability flags: {', '.join(e.vulnerability_flags) or 'none'}\nRecommendation: {d.recommendation}\nEvidence strength: {e.score_label} ({e.evidence_score}/100)\nMissing: {', '.join(e.missing_fields) or 'none'}\nConflicts: {', '.join(e.conflicts) or 'none'}\nSafety: {s.status}\nHuman Gate: {h.status}\nLimitation: {s.reason}\n\nPhysical/contextual observations are evidence inputs, not calibrated flood probabilities. Thresholds remain experimental guardrails.\nWorkflow validation ≠ real-world readiness.\nA good outcome is not always a classification.\nPrinciple: AI recommends. AI explains. Humans decide.")
     return {"final_report":report,"trace":_trace(state,"Reporter: explainable response generated; shadow-mode principle preserved.")}
