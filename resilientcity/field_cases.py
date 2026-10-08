@@ -31,6 +31,10 @@ class FieldContext(BaseModel):
     soil_saturation_pct: float | None = Field(default=None, ge=0, le=100)
     impervious_surface_pct: float | None = Field(default=None, ge=0, le=100)
     drainage_status: Literal["clear","partially_blocked","clogged","unknown"] | None = None
+    terrain_slope_pct: float | None = Field(default=None, ge=0)
+    land_use: str | None = None
+    observed_at: datetime | None = None
+    source_ids: list[str] = Field(default_factory=list)
     methodology_notes: list[str] = Field(default_factory=list)
 
 class HistoricalOutcome(BaseModel):
@@ -68,6 +72,8 @@ class FieldCase(BaseModel):
             "location":self.location,
             "event_time":self.event_time.isoformat() if self.event_time else None,
             "evidence_cutoff":self.evidence_cutoff.isoformat(),
-            "context":self.context.model_dump(mode="json"),
+            "context": self.context.model_dump(mode="json")
+                if self.context.observed_at is not None and self.context.observed_at <= self.evidence_cutoff
+                else {"status":"NOT_VERIFIED_AT_CUTOFF"},
             "evidence":[item.model_dump(mode="json") for item in self.evidence_available_at_cutoff()],
         }
