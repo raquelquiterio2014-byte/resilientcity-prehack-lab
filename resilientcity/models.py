@@ -23,6 +23,8 @@ class Incident(BaseModel):
     soil_saturation_pct: float | None = Field(default=None, ge=0, le=100)
     impervious_surface_pct: float | None = Field(default=None, ge=0, le=100)
     drainage_status: Literal["clear","partially_blocked","clogged","unknown"] | None = None
+    terrain_slope_pct: float | None = Field(default=None, ge=0)
+    land_use: str | None = None
 
 class EvidenceAssessment(BaseModel):
     state: EvidenceState
