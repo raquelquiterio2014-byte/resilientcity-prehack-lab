@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -21,8 +22,8 @@ class ResilientCityGUI(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("ResilientCity AI — V6 Final Pre-Hackathon Research Prototype | PyCharm Local Demo")
-        self.geometry("1440x900")
-        self.minsize(1180, 760)
+        self.geometry("1200x760")
+        self.minsize(900, 620)
         self.configure(bg=self.NAVY)
         self.app = build_graph()
         self.scenarios = self._load_scenarios()
@@ -52,8 +53,18 @@ class ResilientCityGUI(tk.Tk):
                  text="Incident → Planner → Evidence → Risk → Decision → Critic/Revision → Safety → Human Gate → Reporter",
                  bg=self.NAVY, fg="#c8d9e8", font=("Segoe UI", 9)).pack(anchor="w", pady=(5, 0))
 
-        body = tk.Frame(self, bg=self.LIGHT)
-        body.pack(fill="both", expand=True, padx=24, pady=(0, 10))
+        body_host = tk.Frame(self, bg=self.LIGHT)
+        body_host.pack(fill="both", expand=True, padx=24, pady=(0, 10))
+        canvas = tk.Canvas(body_host, bg=self.LIGHT, highlightthickness=0)
+        vscroll = ttk.Scrollbar(body_host, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=vscroll.set)
+        vscroll.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+        body = tk.Frame(canvas, bg=self.LIGHT)
+        body_window = canvas.create_window((0, 0), window=body, anchor="nw")
+        body.bind("<Configure>", lambda _e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.bind("<Configure>", lambda e: canvas.itemconfigure(body_window, width=e.width))
+        canvas.bind_all("<MouseWheel>", lambda e: canvas.yview_scroll(int(-1 * (e.delta / 120)), "units"))
         body.grid_columnconfigure(0, weight=1)
         body.grid_columnconfigure(1, weight=3)
         body.grid_rowconfigure(0, weight=1)
@@ -69,6 +80,9 @@ class ResilientCityGUI(tk.Tk):
         self.road_status = tk.StringVar(value="unknown")
         self.scenario_choice = tk.StringVar(value="Custom Incident")
         self.reasoning_mode = tk.StringVar(value="deterministic")
+        # Optional local Gemini key for PyCharm testing.
+        # Leave blank in GitHub. Paste your key only in your local copy if desired.
+        self.gemini_api_key = ""
         self.evaluation_mode = tk.StringVar(value="standard")
         self.dry_days=tk.StringVar(value=""); self.soil_saturation=tk.StringVar(value=""); self.impervious=tk.StringVar(value=""); self.drainage=tk.StringVar(value="unknown"); self.terrain_slope=tk.StringVar(value=""); self.land_use=tk.StringVar(value="")
 
@@ -270,6 +284,8 @@ class ResilientCityGUI(tk.Tk):
         widget.insert("1.0", value)
 
     def run_analysis(self):
+        if self.gemini_api_key.strip():
+            os.environ["GEMINI_API_KEY"] = self.gemini_api_key.strip()
         try:
             incident = Incident(
                 incident_id=self.incident_id.get().strip(),
