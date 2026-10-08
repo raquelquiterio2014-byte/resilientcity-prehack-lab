@@ -60,7 +60,7 @@ class FieldCase(BaseModel):
         available=[]
         for item in self.evidence:
             timestamp=item.observed_at or item.retrieved_at
-            if timestamp is None or timestamp <= self.evidence_cutoff:
+            if timestamp is not None and timestamp <= self.evidence_cutoff:
                 available.append(item)
         return available
 
