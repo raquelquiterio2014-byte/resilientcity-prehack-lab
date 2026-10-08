@@ -203,8 +203,14 @@ V5 preserves V4 as the deterministic uncertainty baseline and adds contextual ev
 
 The current contextual thresholds (>15 dry days, >80% soil saturation, >=80% impervious surface) are **experimental guardrails for the learning lab**, not universal hydrological laws and not calibrated flood probabilities.
 
-### Planned V5-B
-LLM assistance will be introduced first in Evidence and Critic/Evaluator through structured Pydantic output, bounded retry, deterministic fallback, provenance references, and trace disclosure. Safety remains deterministic.
+### Implemented V5-B — dual reasoning modes
+The GUI now exposes **Deterministic** and **LLM-Assisted (Gemini 2.5 Flash)** modes.
+
+In LLM-Assisted mode, Gemini is called only for Evidence reasoning and Critic/Evaluator review. Outputs are structured and validated with Pydantic, calls use bounded retry, and failures (including missing key/quota/provider errors) are disclosed in Agent Trace as **Deterministic Fallback**. The deterministic Evidence/VIGIE, Risk/Decision rules and Safety Gate remain authoritative guardrails. Gemini may make Critic review stricter, but it cannot weaken deterministic Critic/Safety decisions.
+
+Configure `GEMINI_API_KEY` in the environment to enable live calls. Without a key the workflow remains runnable through deterministic fallback.
+
+This remains a pre-hackathon learning lab, not the competition implementation.
 
 Partner-supplied field cases are designed to be consumed by this LLM path using only evidence available at or before the case cutoff. Later outcomes remain evaluator-only to reduce hindsight leakage.
 
