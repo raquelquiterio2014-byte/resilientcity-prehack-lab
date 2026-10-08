@@ -20,7 +20,7 @@ class ResilientCityGUI(tk.Tk):
 
     def __init__(self):
         super().__init__()
-        self.title("ResilientCity AI — V4 Experimental | PyCharm Local Demo")
+        self.title("ResilientCity AI — V6 Final Pre-Hackathon Research Prototype | PyCharm Local Demo")
         self.geometry("1440x900")
         self.minsize(1180, 760)
         self.configure(bg=self.NAVY)
@@ -44,7 +44,7 @@ class ResilientCityGUI(tk.Tk):
     def _build_ui(self):
         header = tk.Frame(self, bg=self.NAVY)
         header.pack(fill="x", padx=24, pady=(14, 10))
-        tk.Label(header, text="ResilientCity AI — V4 Experimental", bg=self.NAVY, fg="white",
+        tk.Label(header, text="ResilientCity AI — V6 Final Pre-Hackathon Research Prototype", bg=self.NAVY, fg="white",
                  font=("Segoe UI", 25, "bold")).pack(anchor="w")
         tk.Label(header, text="Explainable Multi-Agent System for Urban Flood Incident Response",
                  bg=self.NAVY, fg="#47c7ff", font=("Segoe UI", 11, "bold")).pack(anchor="w")
@@ -68,6 +68,9 @@ class ResilientCityGUI(tk.Tk):
         self.rainfall = tk.StringVar(value="72.0")
         self.road_status = tk.StringVar(value="unknown")
         self.scenario_choice = tk.StringVar(value="Custom Incident")
+        self.reasoning_mode = tk.StringVar(value="deterministic")
+        self.evaluation_mode = tk.StringVar(value="standard")
+        self.dry_days=tk.StringVar(value=""); self.soil_saturation=tk.StringVar(value=""); self.impervious=tk.StringVar(value=""); self.drainage=tk.StringVar(value="unknown"); self.terrain_slope=tk.StringVar(value=""); self.land_use=tk.StringVar(value="")
 
         ttk.Label(left, text="Scenario").grid(row=0, column=0, sticky="w", pady=(2, 4))
         scenario_values = ["Custom Incident"] + [
@@ -91,16 +94,30 @@ class ResilientCityGUI(tk.Tk):
         self.description.grid(row=11, column=0, sticky="nsew")
         self.description.insert("1.0", "Heavy rainfall and reported street flooding near an intersection.")
 
+        physical=ttk.LabelFrame(left,text="Physical / Contextual Evidence",padding=8); physical.grid(row=12,column=0,sticky="ew",pady=4)
+        for c in range(2): physical.grid_columnconfigure(c,weight=1)
+        for label,var,row,col in [("Dry days",self.dry_days,0,0),("Soil saturation %",self.soil_saturation,0,1),("Impervious %",self.impervious,2,0),("Terrain slope %",self.terrain_slope,2,1),("Land use",self.land_use,4,0)]:
+            ttk.Label(physical,text=label).grid(row=row,column=col,sticky="w"); ttk.Entry(physical,textvariable=var).grid(row=row+1,column=col,sticky="ew",padx=3)
+        ttk.Label(physical,text="Drainage").grid(row=4,column=1,sticky="w"); ttk.Combobox(physical,textvariable=self.drainage,values=["unknown","clear","partially_blocked","clogged"],state="readonly").grid(row=5,column=1,sticky="ew")
+
+        mode_box = ttk.LabelFrame(left, text="Reasoning Mode", padding=8)
+        mode_box.grid(row=13, column=0, sticky="ew", pady=(12, 4))
+        ttk.Radiobutton(mode_box, text="Deterministic", variable=self.reasoning_mode,
+                        value="deterministic").pack(anchor="w")
+        ttk.Radiobutton(mode_box, text="LLM-Assisted (Gemini 2.5 Flash)", variable=self.reasoning_mode,
+                        value="llm_assisted").pack(anchor="w")
         ttk.Button(left, text="Run Multi-Agent Analysis",
-                   command=self.run_analysis).grid(row=12, column=0, sticky="ew", pady=(14, 4))
-        ttk.Button(left, text="Run Pilot Evaluation",
-                   command=self.run_evaluation).grid(row=13, column=0, sticky="ew", pady=4)
+                   command=self.run_analysis).grid(row=14, column=0, sticky="ew", pady=(8, 4))
+        eval_box=ttk.LabelFrame(left,text="Evaluation Mode",padding=8); eval_box.grid(row=15,column=0,sticky="ew",pady=4)
+        ttk.Radiobutton(eval_box,text="Standard",variable=self.evaluation_mode,value="standard").pack(anchor="w"); ttk.Radiobutton(eval_box,text="Historical Shadow Mode",variable=self.evaluation_mode,value="shadow").pack(anchor="w")
+        ttk.Button(left, text="Run Evaluation",
+                   command=self.run_evaluation).grid(row=16, column=0, sticky="ew", pady=4)
         ttk.Button(left, text="Clear Results",
-                   command=self.clear_results).grid(row=14, column=0, sticky="ew", pady=4)
+                   command=self.clear_results).grid(row=17, column=0, sticky="ew", pady=4)
 
         tk.Label(left, text="AI recommends. AI explains.\nHumans decide.",
                  bg=self.CARD, fg=self.BLUE, font=("Segoe UI", 11, "bold"),
-                 justify="left").grid(row=15, column=0, sticky="w", pady=(14, 4))
+                 justify="left").grid(row=17, column=0, sticky="w", pady=(14, 4))
         tk.Label(left, text="Educational pre-hackathon lab.\nNo autonomous emergency actions.",
                  bg=self.CARD, fg=self.MUTED, font=("Segoe UI", 9),
                  justify="left").grid(row=16, column=0, sticky="w")
@@ -133,7 +150,7 @@ class ResilientCityGUI(tk.Tk):
 
         footer = tk.Label(
             self,
-            text="V4 Experimental local PyCharm demo | Evidence Strength is rule-based and is not a calibrated probability.",
+            text="V6 Final Pre-Hackathon Research Prototype | Deterministic or Gemini-assisted Evidence/Critic | Safety remains deterministic.",
             bg=self.BLUE, fg="white", font=("Segoe UI", 9), pady=7
         )
         footer.pack(fill="x", side="bottom")
@@ -259,12 +276,14 @@ class ResilientCityGUI(tk.Tk):
                 location=self.location.get().strip(),
                 description=self.description.get("1.0", "end").strip(),
                 rainfall_mm=float(self.rainfall.get()) if self.rainfall.get().strip() else None,
-                road_status=self.road_status.get(),
+                road_status=self.road_status.get(), antecedent_dry_days=int(self.dry_days.get()) if self.dry_days.get().strip() else None, soil_saturation_pct=float(self.soil_saturation.get()) if self.soil_saturation.get().strip() else None, impervious_surface_pct=float(self.impervious.get()) if self.impervious.get().strip() else None, drainage_status=self.drainage.get(), terrain_slope_pct=float(self.terrain_slope.get()) if self.terrain_slope.get().strip() else None, land_use=self.land_use.get().strip() or None,
             )
             result = self.app.invoke({
                 "incident": incident.model_dump(),
                 "revision_count": 0,
                 "trace": [],
+                "reasoning_mode": self.reasoning_mode.get(),
+                "llm_status": {},
             })
         except (ValidationError, ValueError) as exc:
             messagebox.showerror("Invalid incident data", str(exc))
@@ -293,12 +312,15 @@ class ResilientCityGUI(tk.Tk):
                       for index, event in enumerate(result.get("trace", []), start=1))
         )
         state_lines = []
-        for key in ("incident", "evidence", "risk", "decision", "critic", "safety", "revision_count"):
+        for key in ("reasoning_mode", "incident", "evidence", "llm_evidence", "risk", "decision", "critic", "llm_critic", "llm_status", "safety", "revision_count"):
             if key in result:
                 state_lines.append(f"[{key.upper()}]\n{result[key]}\n")
         self._replace(self.state_text, "\n".join(state_lines))
 
     def run_evaluation(self):
+        if self.evaluation_mode.get()=="shadow":
+            messagebox.showinfo("Historical Shadow Mode","Uses timestamped FieldCase evidence and an independent outcome-blinded HumanBaseline. The GUI will not invent a human baseline; use resilientcity.shadow_mode.evaluate_pair for paired files.")
+            return
         try:
             results, metrics = evaluate_all()
         except Exception as exc:
