@@ -1,4 +1,4 @@
-"""Structured contracts for V5 LLM-assisted agents.
+"""Structured contracts for V6 LLM-assisted agents.
 
 No provider is selected here. These models define the validated boundary
 between an LLM and the deterministic multi-agent workflow.
