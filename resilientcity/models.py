@@ -56,6 +56,10 @@ class SafetyReview(BaseModel):
     status: Literal["APPROVED","APPROVED_WITH_LIMITATIONS","HUMAN_REVIEW_REQUIRED","BLOCKED"]
     reason: str
 
+class HumanGateReview(BaseModel):
+    status: Literal["NO_ACTION_REQUIRED","REVIEW_REQUIRED","ROUTE_OUT_OF_SCOPE"]
+    reason: str
+
 class EvaluationResult(BaseModel):
     scenario_id: str
     expected_priority: Priority
