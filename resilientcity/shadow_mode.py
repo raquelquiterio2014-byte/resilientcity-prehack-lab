@@ -59,11 +59,10 @@ def cutoff_snapshot(case: FieldCase) -> dict:
         if any(t > case.evidence_cutoff for t in (item.observed_at,item.retrieved_at) if t is not None):
             continue
         evidence.append(item)
-    # Context has no individual timestamps in V5: do not assume it was known at cutoff.
-    return {"case_id":case.case_id,"location":case.location,
-            "evidence_cutoff":case.evidence_cutoff.isoformat(),
-            "evidence":[e.model_dump(mode="json") for e in evidence],
-            "context_status":"NOT_VERIFIED_AT_CUTOFF"}
+    context=None
+    if case.context.observed_at is not None and case.context.observed_at <= case.evidence_cutoff:
+        context=case.context.model_dump(mode="json")
+    return {"case_id":case.case_id,"location":case.location,"evidence_cutoff":case.evidence_cutoff.isoformat(),"evidence":[e.model_dump(mode="json") for e in evidence],"context":context,"context_status":"VERIFIED_AT_CUTOFF" if context else "NOT_VERIFIED_AT_CUTOFF"}
 
 def incident_from_snapshot(case: FieldCase, snapshot: dict) -> Incident:
     """Conservative mapping: unknown inputs remain unknown, never guessed."""
@@ -85,10 +84,9 @@ def incident_from_snapshot(case: FieldCase, snapshot: dict) -> Incident:
     return Incident(incident_id=case.case_id,location=case.location,
         description=case.title if len(case.title)>=5 else "Historical flood incident",
         rainfall_mm=rain,road_status=road,road_reports=reports,
-        # Context values excluded until separately timestamp-verified.
-        )
+        antecedent_dry_days=(snapshot.get("context") or {}).get("antecedent_dry_days"), soil_saturation_pct=(snapshot.get("context") or {}).get("soil_saturation_pct"), impervious_surface_pct=(snapshot.get("context") or {}).get("impervious_surface_pct"), drainage_status=(snapshot.get("context") or {}).get("drainage_status"), terrain_slope_pct=(snapshot.get("context") or {}).get("terrain_slope_pct"), land_use=(snapshot.get("context") or {}).get("land_use"))
 
-def compare_case(case: FieldCase, human: HumanBaseline, app=None) -> ShadowResult:
+def compare_case(case: FieldCase, human: HumanBaseline, app=None, reasoning_mode: str = "deterministic") -> ShadowResult:
     if case.case_id!=human.case_id or case.evidence_cutoff!=human.evidence_cutoff:
         raise ValueError("Human review case/cutoff does not match historical case")
     if not human.outcome_blinded:
@@ -100,7 +98,7 @@ def compare_case(case: FieldCase, human: HumanBaseline, app=None) -> ShadowResul
     incident=incident_from_snapshot(case,snap)
     graph=app or build_graph()
     start=perf_counter()
-    output=graph.invoke({"incident":incident.model_dump(),"revision_count":0,"trace":[]})
+    output=graph.invoke({"incident":incident.model_dump(),"field_payload":snap,"reasoning_mode":reasoning_mode,"llm_status":{},"revision_count":0,"trace":[]})
     elapsed=(perf_counter()-start)*1000
     decision=output["decision"]["priority"]
     safety=output["safety"]["status"]
