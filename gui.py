@@ -20,7 +20,7 @@ class ResilientCityGUI(tk.Tk):
 
     def __init__(self):
         super().__init__()
-        self.title("ResilientCity AI — V5 Experimental | PyCharm Local Demo")
+        self.title("ResilientCity AI — V5-B Gemini | PyCharm Local Demo")
         self.geometry("1440x900")
         self.minsize(1180, 760)
         self.configure(bg=self.NAVY)
@@ -44,7 +44,7 @@ class ResilientCityGUI(tk.Tk):
     def _build_ui(self):
         header = tk.Frame(self, bg=self.NAVY)
         header.pack(fill="x", padx=24, pady=(14, 10))
-        tk.Label(header, text="ResilientCity AI — V5 Experimental", bg=self.NAVY, fg="white",
+        tk.Label(header, text="ResilientCity AI — V5-B Gemini", bg=self.NAVY, fg="white",
                  font=("Segoe UI", 25, "bold")).pack(anchor="w")
         tk.Label(header, text="Explainable Multi-Agent System for Urban Flood Incident Response",
                  bg=self.NAVY, fg="#47c7ff", font=("Segoe UI", 11, "bold")).pack(anchor="w")
@@ -140,7 +140,7 @@ class ResilientCityGUI(tk.Tk):
 
         footer = tk.Label(
             self,
-            text="V5 Experimental | Deterministic or Gemini-assisted Evidence/Critic | Safety remains deterministic.",
+            text="V5-B Gemini | Gemini 2.5 Flash-assisted Evidence/Critic | Safety remains deterministic.",
             bg=self.BLUE, fg="white", font=("Segoe UI", 9), pady=7
         )
         footer.pack(fill="x", side="bottom")
