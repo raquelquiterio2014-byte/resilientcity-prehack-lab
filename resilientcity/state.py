@@ -11,6 +11,7 @@ class ResilientCityState(TypedDict, total=False):
     decision: dict[str, Any]
     critic: dict[str, Any]
     safety: dict[str, Any]
+    human_gate: dict[str, Any]
     revision_count: int
     trace: list[str]
     final_report: str
