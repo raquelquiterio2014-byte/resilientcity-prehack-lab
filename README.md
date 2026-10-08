@@ -211,3 +211,14 @@ Partner-supplied field cases are designed to be consumed by this LLM path using 
 **Complete data does not necessarily mean sufficient decision evidence.**
 
 **AI recommends. AI explains. Humans decide.**
+
+
+## V6 Final Pre-Hackathon Research Prototype
+
+V6 consolidates the V5-B dual reasoning modes with timestamp-safe physical/contextual field evidence and retrospective Human Baseline / Shadow Mode evaluation. Gemini 2.5 Flash assists Evidence and Critic only; structured outputs are Pydantic-validated, retry is bounded, fallback is deterministic, and Safety remains deterministic and authoritative.
+
+Physical/contextual inputs include antecedent dry days, soil saturation, impervious surface, drainage, terrain slope and land use. Partner-supplied field observations are evidence inputs, not calibrated probabilities or universal hydrological laws. Historical context must be timestamped at/before the evidence cutoff to enter retrospective reasoning; later outcomes remain evaluator-only.
+
+V6 is the final pre-hackathon research prototype. It is not an operational emergency-response system and not the competition implementation.
+
+**AI recommends. AI explains. Humans decide.**
