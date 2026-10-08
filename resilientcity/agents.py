@@ -1,4 +1,5 @@
 from .models import Incident, EvidenceAssessment, RiskAssessment, DecisionProposal, CriticReview, SafetyReview
+from .llm_agents import run_llm_evidence, run_llm_critic
 
 DRY_DAYS_EXPERIMENTAL_THRESHOLD = 15
 SOIL_SATURATION_EXPERIMENTAL_THRESHOLD = 80.0
@@ -45,6 +46,21 @@ def evidence_agent(state):
     e=EvidenceAssessment(state=state_name,weather_signal=weather,road_status=i.road_status,conflicts=conflicts,missing_fields=sorted(set(missing)),evidence_score=score,score_label=label,evidence_complete=not missing and not conflicts and not i.out_of_scope,contextual_uncertainty=contextual,vulnerability_flags=flags,human_review_trigger=review)
     return {"evidence":e.model_dump(),"trace":_trace(state,f"Evidence/VIGIE: state={state_name}, score={score}/100, contextual_uncertainty={contextual}, vulnerability_flags={flags}, missing={e.missing_fields}, conflicts={conflicts}.")}
 
+def llm_evidence_agent(state):
+    """Optional LLM Evidence reasoning. Deterministic VIGIE remains authoritative."""
+    if state.get("reasoning_mode", "deterministic") != "llm_assisted":
+        return {"llm_status":{"evidence":"not_requested","critic":"not_requested"},
+                "trace":_trace(state,"LLM Evidence: not requested (Deterministic Mode).")}
+    result=run_llm_evidence(state["incident"], state["evidence"])
+    status=dict(state.get("llm_status",{})); status["evidence"]=result.source
+    if result.value is None:
+        status["evidence_error"]=result.error
+        return {"llm_evidence":{},"llm_status":status,
+                "trace":_trace(state,f"LLM Evidence: Deterministic Fallback after {result.attempts} attempt(s). Reason: {result.error}")}
+    value=result.value.model_dump()
+    return {"llm_evidence":value,"llm_status":status,
+            "trace":_trace(state,f"LLM Evidence: Gemini ({result.attempts} attempt(s)); recommendation={value['recommendation']}. Structured output validated by Pydantic.")}
+
 def risk_agent(state):
     i=Incident.model_validate(state["incident"]); e=EvidenceAssessment.model_validate(state["evidence"])
     if e.state=="OUT_OF_SCOPE": level,r="OUT_OF_SCOPE","Incident is outside the validated urban-flood scope."
@@ -77,6 +93,26 @@ def critic_agent(state):
     else: x=CriticReview(status="PASS",reason="Evidence limitations are explicit and the proposal may proceed to deterministic safety review.")
     return {"critic":x.model_dump(),"trace":_trace(state,f"Critic: {x.status} — {x.reason}")}
 
+def llm_critic_agent(state):
+    """Optional Gemini critic; it may make review stricter, never bypass deterministic Critic/Safety."""
+    if state.get("reasoning_mode", "deterministic") != "llm_assisted":
+        return {"trace":_trace(state,"LLM Critic: not requested (Deterministic Mode).")}
+    result=run_llm_critic(state["incident"],state["evidence"],state["decision"],state.get("llm_evidence"))
+    status=dict(state.get("llm_status",{})); status["critic"]=result.source
+    if result.value is None:
+        status["critic_error"]=result.error
+        return {"llm_critic":{},"llm_status":status,
+                "trace":_trace(state,f"LLM Critic: Deterministic Fallback after {result.attempts} attempt(s). Reason: {result.error}")}
+    value=result.value.model_dump()
+    deterministic=CriticReview.model_validate(state["critic"])
+    order={"PASS":0,"REVISE":1,"ESCALATE":2}
+    effective=deterministic
+    if order[value["status"]]>order[deterministic.status]:
+        effective=CriticReview(status=value["status"],reason=f"LLM-assisted stricter review: {value['rationale']}")
+    status["critic_effective"]=effective.status
+    return {"llm_critic":value,"critic":effective.model_dump(),"llm_status":status,
+            "trace":_trace(state,f"LLM Critic: Gemini ({result.attempts} attempt(s)); result={value['status']}; effective critic={effective.status}. LLM cannot weaken deterministic review.")}
+
 def revision_agent(state):
     n=state.get("revision_count",0)+1
     return {"revision_count":n,"trace":_trace(state,f"Revision: bounded cycle {n}; unresolved evidence is preserved when no new source exists.")}
@@ -91,5 +127,6 @@ def safety_agent(state):
 
 def reporter_agent(state):
     i=Incident.model_validate(state["incident"]); d=DecisionProposal.model_validate(state["decision"]); e=EvidenceAssessment.model_validate(state["evidence"]); s=SafetyReview.model_validate(state["safety"])
-    report=(f"Incident {i.incident_id} — {i.location or '[location missing]'}\nDecision: {d.priority}\nEvidence state: {e.state}\nContextual uncertainty: {e.contextual_uncertainty}\nVulnerability flags: {', '.join(e.vulnerability_flags) or 'none'}\nRecommendation: {d.recommendation}\nEvidence strength: {e.score_label} ({e.evidence_score}/100)\nMissing: {', '.join(e.missing_fields) or 'none'}\nConflicts: {', '.join(e.conflicts) or 'none'}\nSafety: {s.status}\nLimitation: {s.reason}\n\nThresholds used for contextual flags are experimental guardrails, not calibrated flood probabilities.\nWorkflow validation ≠ real-world readiness.\nA good outcome is not always a classification.\nPrinciple: AI recommends. AI explains. Humans decide.")
+    mode=state.get("reasoning_mode","deterministic"); ls=state.get("llm_status",{})
+    report=(f"Reasoning mode: {mode}\nLLM Evidence source: {ls.get('evidence','n/a')}\nLLM Critic source: {ls.get('critic','n/a')}\nIncident {i.incident_id} — {i.location or '[location missing]'}\nDecision: {d.priority}\nEvidence state: {e.state}\nContextual uncertainty: {e.contextual_uncertainty}\nVulnerability flags: {', '.join(e.vulnerability_flags) or 'none'}\nRecommendation: {d.recommendation}\nEvidence strength: {e.score_label} ({e.evidence_score}/100)\nMissing: {', '.join(e.missing_fields) or 'none'}\nConflicts: {', '.join(e.conflicts) or 'none'}\nSafety: {s.status}\nLimitation: {s.reason}\n\nThresholds used for contextual flags are experimental guardrails, not calibrated flood probabilities.\nWorkflow validation ≠ real-world readiness.\nA good outcome is not always a classification.\nPrinciple: AI recommends. AI explains. Humans decide.")
     return {"final_report":report,"trace":_trace(state,"Reporter: explainable response generated; shadow-mode principle preserved.")}
