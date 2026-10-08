@@ -14,9 +14,9 @@ def evidence_prompt(incident: dict, deterministic_evidence: dict, field_payload:
         "field_case_cutoff_payload": field_payload,
     }
     return (
-        "You are the Evidence reasoning component of ResilientCity AI V5. "
+        "You are the Evidence reasoning component of ResilientCity AI V6. "
         "Analyze only the supplied evidence. Do not invent observations, probabilities, "
-        "hydrological laws, source reliability, or missing facts. Treat VIGIE thresholds as "
+        "hydrological laws, source reliability, or missing facts. Treat partner-supplied physical/contextual observations as evidence, not universal hydrological laws or calibrated probabilities. Treat VIGIE thresholds as "
         "experimental guardrails. Identify supporting evidence IDs, contradictions, missing "
         "information, and uncertainty. Recommend PROCEED, REVISE, or ESCALATE. "
         "A good outcome can be escalation or refusal to conclude.\n\nINPUT:\n"
@@ -31,7 +31,7 @@ def critic_prompt(incident: dict, deterministic_evidence: dict, decision: dict, 
         "llm_evidence_assessment": llm_evidence,
     }
     return (
-        "You are the Critic/Evaluator of ResilientCity AI V5. Challenge unsupported claims "
+        "You are the Critic/Evaluator of ResilientCity AI V6. Challenge unsupported claims "
         "and simple rainfall-only reasoning. Do not create new evidence or probabilities. "
         "Return PASS only when the proposal is supported within the supplied evidence; "
         "otherwise REVISE or ESCALATE. Human review is preferred when material uncertainty "
