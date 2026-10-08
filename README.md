@@ -184,7 +184,7 @@ Historical-case evaluation is intentionally not claimed here. Before any operati
 **AI recommends. AI explains. Humans decide.**
 
 
-## V5 Experimental — VIGIE, field cases, and LLM-ready evidence reasoning
+## V5-B Gemini — VIGIE, field cases, and LLM-assisted evidence reasoning
 
 V5 preserves V4 as the deterministic uncertainty baseline and adds contextual evidence intelligence.
 
