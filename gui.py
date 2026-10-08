@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -69,6 +70,9 @@ class ResilientCityGUI(tk.Tk):
         self.road_status = tk.StringVar(value="unknown")
         self.scenario_choice = tk.StringVar(value="Custom Incident")
         self.reasoning_mode = tk.StringVar(value="deterministic")
+        # Optional local Gemini key for PyCharm testing.
+        # Leave blank in GitHub. Paste your key only in your local copy if desired.
+        self.gemini_api_key = ""
 
         ttk.Label(left, text="Scenario").grid(row=0, column=0, sticky="w", pady=(2, 4))
         scenario_values = ["Custom Incident"] + [
@@ -260,6 +264,8 @@ class ResilientCityGUI(tk.Tk):
         widget.insert("1.0", value)
 
     def run_analysis(self):
+        if self.gemini_api_key.strip():
+            os.environ["GEMINI_API_KEY"] = self.gemini_api_key.strip()
         try:
             incident = Incident(
                 incident_id=self.incident_id.get().strip(),
