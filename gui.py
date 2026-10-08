@@ -20,7 +20,7 @@ class ResilientCityGUI(tk.Tk):
 
     def __init__(self):
         super().__init__()
-        self.title("ResilientCity AI — V4 Experimental | PyCharm Local Demo")
+        self.title("ResilientCity AI — V5 Experimental | PyCharm Local Demo")
         self.geometry("1440x900")
         self.minsize(1180, 760)
         self.configure(bg=self.NAVY)
@@ -44,7 +44,7 @@ class ResilientCityGUI(tk.Tk):
     def _build_ui(self):
         header = tk.Frame(self, bg=self.NAVY)
         header.pack(fill="x", padx=24, pady=(14, 10))
-        tk.Label(header, text="ResilientCity AI — V4 Experimental", bg=self.NAVY, fg="white",
+        tk.Label(header, text="ResilientCity AI — V5 Experimental", bg=self.NAVY, fg="white",
                  font=("Segoe UI", 25, "bold")).pack(anchor="w")
         tk.Label(header, text="Explainable Multi-Agent System for Urban Flood Incident Response",
                  bg=self.NAVY, fg="#47c7ff", font=("Segoe UI", 11, "bold")).pack(anchor="w")
@@ -68,6 +68,7 @@ class ResilientCityGUI(tk.Tk):
         self.rainfall = tk.StringVar(value="72.0")
         self.road_status = tk.StringVar(value="unknown")
         self.scenario_choice = tk.StringVar(value="Custom Incident")
+        self.reasoning_mode = tk.StringVar(value="deterministic")
 
         ttk.Label(left, text="Scenario").grid(row=0, column=0, sticky="w", pady=(2, 4))
         scenario_values = ["Custom Incident"] + [
@@ -91,16 +92,22 @@ class ResilientCityGUI(tk.Tk):
         self.description.grid(row=11, column=0, sticky="nsew")
         self.description.insert("1.0", "Heavy rainfall and reported street flooding near an intersection.")
 
+        mode_box = ttk.LabelFrame(left, text="Reasoning Mode", padding=8)
+        mode_box.grid(row=12, column=0, sticky="ew", pady=(12, 4))
+        ttk.Radiobutton(mode_box, text="Deterministic", variable=self.reasoning_mode,
+                        value="deterministic").pack(anchor="w")
+        ttk.Radiobutton(mode_box, text="LLM-Assisted (Gemini 2.5 Flash)", variable=self.reasoning_mode,
+                        value="llm_assisted").pack(anchor="w")
         ttk.Button(left, text="Run Multi-Agent Analysis",
-                   command=self.run_analysis).grid(row=12, column=0, sticky="ew", pady=(14, 4))
+                   command=self.run_analysis).grid(row=13, column=0, sticky="ew", pady=(8, 4))
         ttk.Button(left, text="Run Pilot Evaluation",
-                   command=self.run_evaluation).grid(row=13, column=0, sticky="ew", pady=4)
+                   command=self.run_evaluation).grid(row=14, column=0, sticky="ew", pady=4)
         ttk.Button(left, text="Clear Results",
-                   command=self.clear_results).grid(row=14, column=0, sticky="ew", pady=4)
+                   command=self.clear_results).grid(row=15, column=0, sticky="ew", pady=4)
 
         tk.Label(left, text="AI recommends. AI explains.\nHumans decide.",
                  bg=self.CARD, fg=self.BLUE, font=("Segoe UI", 11, "bold"),
-                 justify="left").grid(row=15, column=0, sticky="w", pady=(14, 4))
+                 justify="left").grid(row=17, column=0, sticky="w", pady=(14, 4))
         tk.Label(left, text="Educational pre-hackathon lab.\nNo autonomous emergency actions.",
                  bg=self.CARD, fg=self.MUTED, font=("Segoe UI", 9),
                  justify="left").grid(row=16, column=0, sticky="w")
@@ -133,7 +140,7 @@ class ResilientCityGUI(tk.Tk):
 
         footer = tk.Label(
             self,
-            text="V4 Experimental local PyCharm demo | Evidence Strength is rule-based and is not a calibrated probability.",
+            text="V5 Experimental | Deterministic or Gemini-assisted Evidence/Critic | Safety remains deterministic.",
             bg=self.BLUE, fg="white", font=("Segoe UI", 9), pady=7
         )
         footer.pack(fill="x", side="bottom")
@@ -265,6 +272,8 @@ class ResilientCityGUI(tk.Tk):
                 "incident": incident.model_dump(),
                 "revision_count": 0,
                 "trace": [],
+                "reasoning_mode": self.reasoning_mode.get(),
+                "llm_status": {},
             })
         except (ValidationError, ValueError) as exc:
             messagebox.showerror("Invalid incident data", str(exc))
@@ -293,7 +302,7 @@ class ResilientCityGUI(tk.Tk):
                       for index, event in enumerate(result.get("trace", []), start=1))
         )
         state_lines = []
-        for key in ("incident", "evidence", "risk", "decision", "critic", "safety", "revision_count"):
+        for key in ("reasoning_mode", "incident", "evidence", "llm_evidence", "risk", "decision", "critic", "llm_critic", "llm_status", "safety", "revision_count"):
             if key in result:
                 state_lines.append(f"[{key.upper()}]\n{result[key]}\n")
         self._replace(self.state_text, "\n".join(state_lines))
