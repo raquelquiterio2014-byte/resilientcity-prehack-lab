@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import pytest
-from resilientcity.field_cases import FieldCase, FieldEvidenceItem, HistoricalOutcome
+from resilientcity.field_cases import FieldCase, FieldEvidenceItem, HistoricalOutcome, FieldContext
 from resilientcity.shadow_mode import HumanBaseline, cutoff_snapshot, compare_case, aggregate
 
 T=datetime(2026, 9, 1, 12)
@@ -40,3 +40,16 @@ def test_reject_unblinded_review():
 def test_reject_mismatched_cutoff():
     with pytest.raises(ValueError,match="cutoff"):
         compare_case(case(),review(evidence_cutoff=T-timedelta(days=1)))
+
+
+def test_timestamped_physical_context_enters_snapshot():
+    c=case(); c.context=FieldContext(antecedent_dry_days=18,soil_saturation_pct=85,impervious_surface_pct=82,drainage_status="clogged",terrain_slope_pct=6,land_use="urban",observed_at=T-timedelta(minutes=10),source_ids=["partner-field-note"])
+    snap=cutoff_snapshot(c)
+    assert snap["context_status"]=="VERIFIED_AT_CUTOFF"
+    assert snap["context"]["drainage_status"]=="clogged"
+
+def test_future_physical_context_is_excluded():
+    c=case(); c.context=FieldContext(drainage_status="clogged",observed_at=T+timedelta(minutes=1))
+    snap=cutoff_snapshot(c)
+    assert snap["context"] is None
+    assert snap["context_status"]=="NOT_VERIFIED_AT_CUTOFF"
