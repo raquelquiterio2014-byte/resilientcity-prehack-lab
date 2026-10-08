@@ -1,37 +1,19 @@
-# V6 Experimental — Human Baseline & Retrospective Shadow Mode
+# V6 Final Pre-Hackathon Research Prototype
 
-**Hackathon-first:** V6 is a small evaluation layer on the existing V5 multi-agent workflow, not a replacement for Context/Evidence → Risk/Decision → Critic → Safety → Human Gate → Explanation.
+V6 is the final pre-hackathon research prototype, not an operational emergency-response system or competition implementation.
 
 ## Research question
-Do AI recommendations and escalations remain useful and traceable when compared with independent human judgments using the same historical evidence cutoff?
+Can an explainable multi-agent system combine deterministic rules, LLM-assisted reasoning, physical/contextual evidence and independent human judgment to support urban-flood decisions under uncertainty without exceeding evidence or safety boundaries?
 
-## Sprint-style milestones and acceptance criteria
-1. **Baseline:** preserve V5 on its own branch; V6 branch is independent.
-2. **Historical evidence:** every case has a timestamped evidence cutoff and source IDs; unknown-time or post-cutoff evidence is excluded from V6 snapshot.
-3. **Human baseline:** independent reviewer submits priority, escalation, rationale, evidence IDs, and measured review time without seeing later outcome.
-4. **Shadow run:** run existing multi-agent graph without taking operational action; store trace, priority, safety status and workflow duration.
-5. **Evaluation:** report agreement, disagreements, review burden, and timing. Label missed/unnecessary escalations **only after independent adjudication**, not from AI-human disagreement alone.
+## Architecture
+Incident → Planner → deterministic Evidence/VIGIE → optional Gemini Evidence → Risk/Impact → Decision → deterministic Critic → optional Gemini Critic → bounded Revision → deterministic Safety → Human Gate → Reporter.
 
-## Important limitations
-- Retrospective shadow mode is NOT a prospective operational pilot.
-- The current V6 mapper only consumes explicitly structured `rainfall_mm` and `road_status` fields; other field context is not automatically inferred.
-- V5 field context lacks individual observation timestamps, so V6 conservatively excludes it until timestamped provenance is introduced.
-- A documented later outcome is evaluator-only and never passed to the graph.
-- Human baseline is a real independent review record, NOT the synthetic manual_baseline heuristic from V4/V5.
-- Current implementation does not yet expose a V6 GUI tab or live Gemini integration.
-- No emergency action, dispatch or road closure is performed.
-- No claim of real-world accuracy or readiness is warranted by synthetic cases.
+Gemini 2.5 Flash uses Pydantic structured output, bounded retry and deterministic fallback. It may make critique stricter but cannot weaken deterministic Critic/Safety controls.
 
-## Usage
-Prepare a field-case JSON matching `resilientcity.field_cases.FieldCase` and a blinded human-review JSON matching `resilientcity.shadow_mode.HumanBaseline`.
+## Physical/contextual evidence
+Antecedent dry days, soil saturation, impervious surface, drainage, terrain slope and land use are supported. Partner-supplied observations, including material contributed by Emmanuel Dorlet, are evidence inputs—not universal hydrological laws, calibrated probabilities, or automatically verified facts. Historical context enters retrospective reasoning only when timestamped at/before the evidence cutoff. Later outcomes are evaluator-only.
 
-```python
-from resilientcity.shadow_mode import evaluate_pair
-result = evaluate_pair("case.json", "human_review.json")
-print(result)
-```
+## Evaluation
+Standard synthetic evaluation tests workflow behaviour. Historical Shadow Mode compares the AI with an independent outcome-blinded HumanBaseline using the same cutoff. Agreement is descriptive; missed/unnecessary escalation requires independent adjudication.
 
-## Next only if hackathon schedule permits
-Add an optional evaluation GUI panel, case-by-case adjudication, and timestamped contextual inputs. Preserve strong multi-agent demonstration as priority.
-
-**AI recommends. AI explains. Humans decide.**
+AI recommends. AI explains. Humans decide.
