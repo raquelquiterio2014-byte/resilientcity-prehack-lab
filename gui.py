@@ -85,6 +85,7 @@ class ResilientCityGUI(tk.Tk):
         self.gemini_api_key = ""
         self.evaluation_mode = tk.StringVar(value="standard")
         self.dry_days=tk.StringVar(value=""); self.soil_saturation=tk.StringVar(value=""); self.impervious=tk.StringVar(value=""); self.drainage=tk.StringVar(value="unknown"); self.terrain_slope=tk.StringVar(value=""); self.land_use=tk.StringVar(value="")
+        self.selected_scenario_incident = {}
 
         ttk.Label(left, text="Scenario").grid(row=0, column=0, sticky="w", pady=(2, 4))
         scenario_values = ["Custom Incident"] + [
@@ -196,12 +197,19 @@ class ResilientCityGUI(tk.Tk):
             return
 
         incident = scenario["incident"]
+        self.selected_scenario_incident = dict(incident)
         self.incident_id.set(incident["incident_id"])
         self.location.set(incident["location"])
         self.rainfall.set("" if incident["rainfall_mm"] is None else str(incident["rainfall_mm"]))
         self.road_status.set(incident["road_status"])
         self.description.delete("1.0", "end")
         self.description.insert("1.0", incident["description"])
+        self.dry_days.set("" if incident.get("antecedent_dry_days") is None else str(incident.get("antecedent_dry_days")))
+        self.soil_saturation.set("" if incident.get("soil_saturation_pct") is None else str(incident.get("soil_saturation_pct")))
+        self.impervious.set("" if incident.get("impervious_surface_pct") is None else str(incident.get("impervious_surface_pct")))
+        self.drainage.set(incident.get("drainage_status") or "unknown")
+        self.terrain_slope.set("" if incident.get("terrain_slope_pct") is None else str(incident.get("terrain_slope_pct")))
+        self.land_use.set(incident.get("land_use") or "")
         self.clear_results()
 
     def _field(self, parent, label, variable, row):
@@ -237,7 +245,7 @@ class ResilientCityGUI(tk.Tk):
                  font=("Segoe UI", 14, "bold")).pack(anchor="w")
         self.eval_statement = tk.Label(
             intro,
-            text="Click “Run Pilot Evaluation” to evaluate the labelled synthetic scenarios.",
+            text="Standard Evaluation runs deterministic labelled synthetic scenarios only. Historical Shadow Mode uses paired timestamped case/human files.",
             bg=self.CARD, fg=self.MUTED, font=("Segoe UI", 10), justify="left"
         )
         self.eval_statement.pack(anchor="w", pady=(3, 8))
@@ -287,13 +295,21 @@ class ResilientCityGUI(tk.Tk):
         if self.gemini_api_key.strip():
             os.environ["GEMINI_API_KEY"] = self.gemini_api_key.strip()
         try:
-            incident = Incident(
-                incident_id=self.incident_id.get().strip(),
-                location=self.location.get().strip(),
-                description=self.description.get("1.0", "end").strip(),
-                rainfall_mm=float(self.rainfall.get()) if self.rainfall.get().strip() else None,
-                road_status=self.road_status.get(), antecedent_dry_days=int(self.dry_days.get()) if self.dry_days.get().strip() else None, soil_saturation_pct=float(self.soil_saturation.get()) if self.soil_saturation.get().strip() else None, impervious_surface_pct=float(self.impervious.get()) if self.impervious.get().strip() else None, drainage_status=self.drainage.get(), terrain_slope_pct=float(self.terrain_slope.get()) if self.terrain_slope.get().strip() else None, land_use=self.land_use.get().strip() or None,
-            )
+            base = dict(self.selected_scenario_incident) if self.scenario_choice.get() != "Custom Incident" else {}
+            base.update({
+                "incident_id": self.incident_id.get().strip(),
+                "location": self.location.get().strip(),
+                "description": self.description.get("1.0", "end").strip(),
+                "rainfall_mm": float(self.rainfall.get()) if self.rainfall.get().strip() else None,
+                "road_status": self.road_status.get(),
+                "antecedent_dry_days": int(self.dry_days.get()) if self.dry_days.get().strip() else None,
+                "soil_saturation_pct": float(self.soil_saturation.get()) if self.soil_saturation.get().strip() else None,
+                "impervious_surface_pct": float(self.impervious.get()) if self.impervious.get().strip() else None,
+                "drainage_status": self.drainage.get(),
+                "terrain_slope_pct": float(self.terrain_slope.get()) if self.terrain_slope.get().strip() else None,
+                "land_use": self.land_use.get().strip() or None,
+            })
+            incident = Incident.model_validate(base)
             result = self.app.invoke({
                 "incident": incident.model_dump(),
                 "revision_count": 0,
@@ -328,7 +344,7 @@ class ResilientCityGUI(tk.Tk):
                       for index, event in enumerate(result.get("trace", []), start=1))
         )
         state_lines = []
-        for key in ("reasoning_mode", "incident", "evidence", "llm_evidence", "risk", "decision", "critic", "llm_critic", "llm_status", "safety", "revision_count"):
+        for key in ("reasoning_mode", "incident", "evidence", "llm_evidence", "risk", "decision", "critic", "llm_critic", "llm_status", "safety", "human_gate", "revision_count"):
             if key in result:
                 state_lines.append(f"[{key.upper()}]\n{result[key]}\n")
         self._replace(self.state_text, "\n".join(state_lines))
@@ -400,7 +416,7 @@ class ResilientCityGUI(tk.Tk):
         self.eval_execution_time.config(text="Average Workflow Execution Time: —")
         self.eval_scenarios.config(text="Scenarios: —")
         self.eval_statement.config(
-            text="Click “Run Pilot Evaluation” to evaluate the labelled synthetic scenarios."
+            text="Standard Evaluation runs deterministic labelled synthetic scenarios only. Historical Shadow Mode uses paired timestamped case/human files."
         )
 
 
