@@ -1,0 +1,28 @@
+{
+  "case_id": "US-TX-HILL-20250704",
+  "title": "Texas Hill Country flash floods, United States — July 2025",
+  "location": "Guadalupe River basin, Kerr County, Texas, USA",
+  "event_focus": "Rapid-onset flash flooding after drought-to-flood transition",
+  "references": [
+    {
+      "organization": "NOAA research repository",
+      "url": "https://repository.library.noaa.gov/view/noaa/76031",
+      "note": "2026 hydrometeorological analysis of 4 July 2025 floods."
+    },
+    {
+      "organization": "NOAA Physical Sciences Laboratory",
+      "url": "https://www.psl.noaa.gov/news/2025/texasfloods.html",
+      "note": "Research on drought-to-flood transition; updated August 2026."
+    }
+  ],
+  "research_test_goal": "Test rapid-onset rainfall, antecedent drought context, uncertainty, and escalation without hindsight leakage.",
+  "case_status": "REAL_EVENT_DOCUMENTED__RETROSPECTIVE_FIXTURE_PENDING",
+  "validation_status": "STRUCTURED_RETROSPECTIVE_VALIDATION_PENDING",
+  "evidence_cutoff": null,
+  "cutoff_evidence": [],
+  "context_at_cutoff": null,
+  "human_baseline": null,
+  "expected_agent_result": null,
+  "later_outcome_access": "EVALUATOR_ONLY",
+  "notes": "Source-backed historical event candidate, NOT executable FieldCase. Dated source publications can be retrospective; do not treat their contents as available before a chosen cutoff. No fabricated timestamps, weather observations, labels, or independent human judgments. Confirm case-level primary sources and obtain time-stamped pre-cutoff evidence before running V6."
+}
