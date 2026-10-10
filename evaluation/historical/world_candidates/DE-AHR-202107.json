@@ -1,0 +1,20 @@
+{
+  "case_id": "DE-AHR-202107",
+  "title": "Ahr Valley, Germany — July 2021",
+  "case_status": "REAL_EVENT_DOCUMENTED__RETROSPECTIVE_FIXTURE_PENDING",
+  "validation_status": "STRUCTURED_RETROSPECTIVE_VALIDATION_PENDING",
+  "event_focus": "intense rainfall, saturated soil, narrow valleys and infrastructure disruption",
+  "primary_reference": {
+    "url": "https://www.dwd.de/EN/ourservices/annual_reports_dwd/annual_reports_pdf/annual_report_2021.pdf?__blob=publicationFile&v=2",
+    "summary": "DWD 2021 annual report describes >100 mm/24h across broad areas, saturated ground, and damage in the Ahr valley.",
+    "publication_type": "official retrospective report"
+  },
+  "research_test_goal": "Test extreme rainfall, terrain/context, infrastructure risk and missing contemporaneous reports.",
+  "evidence_cutoff": null,
+  "cutoff_evidence": [],
+  "context_at_cutoff": null,
+  "human_baseline": null,
+  "expected_agent_result": null,
+  "later_outcome_access": "EVALUATOR_ONLY",
+  "notes": "This is a source-backed case candidate, NOT an executable FieldCase. No observation times or cutoff values are fabricated. Select an operational decision time, obtain dated pre-cutoff observations, then convert to FieldCase. Never expose retrospective outcomes to agents."
+}
