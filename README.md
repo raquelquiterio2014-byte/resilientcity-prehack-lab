@@ -231,7 +231,7 @@ The GUI preserves the complete selected scenario payload so hidden scenario attr
 
 The repository includes controlled synthetic/adversarial evaluation and a retrospective Shadow Mode backend. These are architecture/evaluation experiments, not evidence of real-world operational validity. Additional V6 scenario validation is still required before the pre-hackathon architecture is considered frozen.
 
-Post-hackathon research candidates include historical/field datasets, independent human baselines, Abstention Precision, Forced Classification Rate, Appropriate/Missed/Unnecessary Escalation, cost-sensitive escalation thresholds, inter-rater agreement, evidence traceability, reproducibility, review time and human-review burden.
+Three real French cases have been received for the next research validation stage; structured retrospective validation is pending. They are not yet claimed as validated V6 results. Post-hackathon research candidates also include independent human baselines, Abstention Precision, Forced Classification Rate, Appropriate/Missed/Unnecessary Escalation, cost-sensitive escalation thresholds, inter-rater agreement, evidence traceability, reproducibility, review time and human-review burden.
 
 V6 is the final pre-hackathon research prototype. It is not an operational emergency-response system and not the competition implementation.
 
