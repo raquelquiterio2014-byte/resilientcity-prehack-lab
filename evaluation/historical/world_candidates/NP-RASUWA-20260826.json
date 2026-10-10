@@ -1,0 +1,33 @@
+{
+  "case_id": "NP-RASUWA-20260826",
+  "title": "Rasuwa / Bhote Koshi–Trishuli floods, Nepal — August 2026",
+  "location": "Rasuwa and downstream river corridors, Nepal",
+  "event_focus": "Sudden upstream river surge, cascading infrastructure impacts, uncertain triggering mechanism",
+  "references": [
+    {
+      "organization": "WHO Nepal",
+      "url": "https://www.who.int/nepal/emergencies/2026-rasuwa-flash-floods",
+      "note": "Describes 26 August 2026 flash floods, affected districts and preliminary possible upstream mechanism."
+    },
+    {
+      "organization": "UNICEF Nepal",
+      "url": "https://www.unicef.org/nepal/reports/nepal-floods-2026-humanitarian-situation-reports",
+      "note": "Dated situation reports including 5 October 2026."
+    },
+    {
+      "organization": "United Nations in Nepal",
+      "url": "https://nepal.un.org/en/323255-nepal-rasuwa-floods-2026-situation-reports",
+      "note": "Dated situation reports and flash updates."
+    }
+  ],
+  "research_test_goal": "Challenge rainfall-only reasoning: unknown upstream trigger, cross-border hydrological evidence, downstream cascading impacts, and uncertainty-aware human escalation.",
+  "case_status": "REAL_EVENT_DOCUMENTED__RETROSPECTIVE_FIXTURE_PENDING",
+  "validation_status": "STRUCTURED_RETROSPECTIVE_VALIDATION_PENDING",
+  "evidence_cutoff": null,
+  "cutoff_evidence": [],
+  "context_at_cutoff": null,
+  "human_baseline": null,
+  "expected_agent_result": null,
+  "later_outcome_access": "EVALUATOR_ONLY",
+  "notes": "Source-backed historical event candidate, NOT executable FieldCase. Dated source publications can be retrospective; do not treat their contents as available before a chosen cutoff. No fabricated timestamps, weather observations, labels, or independent human judgments. Confirm case-level primary sources and obtain time-stamped pre-cutoff evidence before running V6."
+}
