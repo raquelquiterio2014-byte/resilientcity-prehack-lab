@@ -1,0 +1,23 @@
+{
+  "case_id": "ES-VALENCIA-20241029",
+  "title": "Valencia DANA floods, Spain — October 2024",
+  "location": "Valencia, Spain",
+  "event_focus": "Torrential rainfall, urban/river flooding, severe infrastructure impacts",
+  "references": [
+    {
+      "organization": "AEMET",
+      "url": "https://www.aemet.es/ca/conocermas/recursos_en_linea/publicaciones_y_estudios/estudios/detalles/dana_oct_24_prelim",
+      "note": "Official meteorological study of the 28 October–4 November 2024 rainfall episode, especially 29 October Valencia."
+    }
+  ],
+  "research_test_goal": "Test source timing, warning evidence, rapid escalation, and uncertain road status under extreme rainfall.",
+  "case_status": "REAL_EVENT_DOCUMENTED__RETROSPECTIVE_FIXTURE_PENDING",
+  "validation_status": "STRUCTURED_RETROSPECTIVE_VALIDATION_PENDING",
+  "evidence_cutoff": null,
+  "cutoff_evidence": [],
+  "context_at_cutoff": null,
+  "human_baseline": null,
+  "expected_agent_result": null,
+  "later_outcome_access": "EVALUATOR_ONLY",
+  "notes": "Source-backed historical event candidate, NOT executable FieldCase. Dated source publications can be retrospective; do not treat their contents as available before a chosen cutoff. No fabricated timestamps, weather observations, labels, or independent human judgments. Confirm case-level primary sources and obtain time-stamped pre-cutoff evidence before running V6."
+}
