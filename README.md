@@ -233,6 +233,9 @@ The repository includes controlled synthetic/adversarial evaluation and a retros
 
 Three real French cases have been received and integrated as timestamped `FieldCase` fixtures under `evaluation/historical/france/`: Pas-de-Calais (Nov 2023), Gard/Hérault (Oct 2024), and Nancy (May 2012). Their status remains **real French cases received — structured retrospective validation pending**. They are not yet claimed as validated V6 results. Supplied expected behaviors are treated only as test hypotheses/evaluator notes, not as agent inputs or ground truth. Source attributions and event details still require primary-source verification before research conclusions are drawn. Post-hackathon research candidates also include independent human baselines, Abstention Precision, Forced Classification Rate, Appropriate/Missed/Unnecessary Escalation, cost-sensitive escalation thresholds, inter-rater agreement, evidence traceability, reproducibility, review time and human-review burden.
 
+
+Four additional international flood events are recorded as **source-backed research candidates** under `evaluation/historical/world_candidates/`: Nepal/Rasuwa (August 2026), Valencia/Spain (October 2024), Texas/USA (July 2025), and Derna/Libya (September 2023). These four are **not yet executable `FieldCase` fixtures**: their evidence cutoffs, time-stamped pre-cutoff observations, independent human baselines, and source-level validation are pending. No retrospective outcomes or expected agent answers should be supplied to the decision graph.
+
 V6 is the final pre-hackathon research prototype. It is not an operational emergency-response system and not the competition implementation.
 
 **AI recommends. AI explains. Humans decide.**
