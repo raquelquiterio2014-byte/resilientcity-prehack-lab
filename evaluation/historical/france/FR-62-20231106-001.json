@@ -1,0 +1,60 @@
+{
+  "case_id": "FR-62-20231106-001",
+  "title": "Pas-de-Calais saturated-soil retrospective case — Nov 2023",
+  "location": "Pas-de-Calais, Aa River, France",
+  "event_time": "2023-11-06T08:00:00Z",
+  "evidence_cutoff": "2023-11-06T08:00:00Z",
+  "evidence": [
+    {
+      "evidence_id": "FR62-RAIN-T0",
+      "claim": "Rainfall observation supplied for the decision cutoff: 20 mm.",
+      "source_type": "meteorological",
+      "source_id": "MeteoFrance",
+      "observed_at": "2023-11-06T07:00:00Z",
+      "source_quality": "HIGH",
+      "freshness": "CURRENT",
+      "verification": "UNVERIFIED",
+      "location": "Pas-de-Calais, France",
+      "structured_data": {
+        "rainfall_mm": 20
+      },
+      "notes": "Source identity supplied with the case; primary source link/document still requires verification."
+    },
+    {
+      "evidence_id": "FR62-ROAD-T0",
+      "claim": "Citizen photo/report indicates approximately 10 cm of water on the road.",
+      "source_type": "citizen_observation",
+      "source_id": "citizen_photo",
+      "observed_at": "2023-11-06T07:30:00Z",
+      "source_quality": "UNKNOWN",
+      "freshness": "CURRENT",
+      "verification": "UNVERIFIED",
+      "location": "Pas-de-Calais, France",
+      "structured_data": {
+        "water_cm": 10,
+        "road_status": "flooded"
+      },
+      "notes": "Timestamp is a test-fixture timestamp derived to place the supplied observation before cutoff; original source timestamp must be verified."
+    }
+  ],
+  "context": {
+    "antecedent_dry_days": 0,
+    "soil_saturation_pct": 98,
+    "impervious_surface_pct": 40,
+    "drainage_status": "clogged",
+    "land_use": "clayey / low-infiltration context (partner-supplied description)",
+    "observed_at": "2023-11-06T07:00:00Z",
+    "source_ids": [
+      "CNED",
+      "MeteoFrance"
+    ],
+    "methodology_notes": [
+      "Partner-supplied case states 20 consecutive rainy days and 201 mm before the event.",
+      "Partner-supplied case describes saturated soil, clayey conditions and overwhelmed drainage.",
+      "OVERWHELMED was mapped conservatively to the current V6 drainage enum value 'clogged'; original wording is preserved here.",
+      "All source claims remain pending primary-source verification."
+    ]
+  },
+  "later_outcome": null,
+  "partner_notes": "STATUS: real French case received — retrospective validation pending. Supplied expected behavior (kept evaluator-only, not sent to agents): risk MODERATE; uncertainty HIGH; Critic review; Safety/Human Gate escalation. This is a test hypothesis, not ground truth. Supplied provenance note: 'CNED 20 days 201mm 3x normal since 1993'."
+}
