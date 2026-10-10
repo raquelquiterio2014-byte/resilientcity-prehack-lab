@@ -1,0 +1,20 @@
+{
+  "case_id": "PK-SINDH-202208",
+  "title": "Sindh, Pakistan — 2022 monsoon floods",
+  "case_status": "REAL_EVENT_DOCUMENTED__RETROSPECTIVE_FIXTURE_PENDING",
+  "validation_status": "STRUCTURED_RETROSPECTIVE_VALIDATION_PENDING",
+  "event_focus": "prolonged flooding, widespread infrastructure disruption and humanitarian impact",
+  "primary_reference": {
+    "url": "https://www.undp.org/pakistan/publications/pakistan-floods-2022-post-disaster-needs-assessment-pdna",
+    "summary": "2022 post-disaster assessment documents nationwide impacts and Sindh as most affected province.",
+    "publication_type": "official retrospective report"
+  },
+  "research_test_goal": "Test prolonged/widespread events, unavailable road evidence and abstention/escalation.",
+  "evidence_cutoff": null,
+  "cutoff_evidence": [],
+  "context_at_cutoff": null,
+  "human_baseline": null,
+  "expected_agent_result": null,
+  "later_outcome_access": "EVALUATOR_ONLY",
+  "notes": "This is a source-backed case candidate, NOT an executable FieldCase. No observation times or cutoff values are fabricated. Select an operational decision time, obtain dated pre-cutoff observations, then convert to FieldCase. Never expose retrospective outcomes to agents."
+}
