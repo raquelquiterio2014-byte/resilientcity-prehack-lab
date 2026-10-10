@@ -1,0 +1,23 @@
+{
+  "case_id": "LY-DERNA-20230910",
+  "title": "Derna floods, Libya — September 2023",
+  "location": "Derna, Libya",
+  "event_focus": "Extreme storm rainfall and dam failures causing cascading urban flooding",
+  "references": [
+    {
+      "organization": "World Meteorological Organization",
+      "url": "https://public.wmo.int/media/news/storm-daniel-leads-extreme-rain-and-floods-mediterranean-heavy-loss-of-life-libya",
+      "note": "WMO reporting on Storm Daniel and dam failures in Derna."
+    }
+  ],
+  "research_test_goal": "Test critical infrastructure failures, cascading flood risk, conflicting/missing observations, and mandatory human escalation.",
+  "case_status": "REAL_EVENT_DOCUMENTED__RETROSPECTIVE_FIXTURE_PENDING",
+  "validation_status": "STRUCTURED_RETROSPECTIVE_VALIDATION_PENDING",
+  "evidence_cutoff": null,
+  "cutoff_evidence": [],
+  "context_at_cutoff": null,
+  "human_baseline": null,
+  "expected_agent_result": null,
+  "later_outcome_access": "EVALUATOR_ONLY",
+  "notes": "Source-backed historical event candidate, NOT executable FieldCase. Dated source publications can be retrospective; do not treat their contents as available before a chosen cutoff. No fabricated timestamps, weather observations, labels, or independent human judgments. Confirm case-level primary sources and obtain time-stamped pre-cutoff evidence before running V6."
+}
