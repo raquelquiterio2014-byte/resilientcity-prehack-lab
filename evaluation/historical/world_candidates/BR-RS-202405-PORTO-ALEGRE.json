@@ -1,0 +1,20 @@
+{
+  "case_id": "BR-RS-202405-PORTO-ALEGRE",
+  "title": "Porto Alegre, Brazil — May 2024",
+  "case_status": "REAL_EVENT_DOCUMENTED__RETROSPECTIVE_FIXTURE_PENDING",
+  "validation_status": "STRUCTURED_RETROSPECTIVE_VALIDATION_PENDING",
+  "event_focus": "urban flood and flood-protection infrastructure failure",
+  "primary_reference": {
+    "url": "https://www.gov.br/ana/pt-br/assuntos/noticias-e-eventos/noticias/estudo-aponta-que-enchentes-de-2024-foram-maior-desastre-natural-da-historia-do-rs-e-sugere-caminhos-para-futuro-com-eventos-extremos-mais-frequentes",
+    "summary": "ANA retrospective study documents Guaíba peak 5.37m and failures of flood-protection structures.",
+    "publication_type": "official retrospective report"
+  },
+  "research_test_goal": "Test conflict between apparent protection and actual system failure; evidence provenance and human escalation.",
+  "evidence_cutoff": null,
+  "cutoff_evidence": [],
+  "context_at_cutoff": null,
+  "human_baseline": null,
+  "expected_agent_result": null,
+  "later_outcome_access": "EVALUATOR_ONLY",
+  "notes": "This is a source-backed case candidate, NOT an executable FieldCase. No observation times or cutoff values are fabricated. Select an operational decision time, obtain dated pre-cutoff observations, then convert to FieldCase. Never expose retrospective outcomes to agents."
+}
