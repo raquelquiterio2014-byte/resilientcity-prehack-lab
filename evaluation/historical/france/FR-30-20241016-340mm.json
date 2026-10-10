@@ -1,0 +1,60 @@
+{
+  "case_id": "FR-30-20241016-340mm",
+  "title": "Gard/Hérault dry-soil and contextual-runoff retrospective case — Oct 2024",
+  "location": "Saint-Hippolyte-du-Fort, Gard, France",
+  "event_time": "2024-10-16T12:00:00Z",
+  "evidence_cutoff": "2024-10-16T12:00:00Z",
+  "evidence": [
+    {
+      "evidence_id": "FR30-RAIN-T0",
+      "claim": "Rainfall observation supplied for the decision cutoff: 40 mm.",
+      "source_type": "meteorological",
+      "source_id": "MeteoFrance",
+      "observed_at": "2024-10-16T11:00:00Z",
+      "source_quality": "HIGH",
+      "freshness": "CURRENT",
+      "verification": "UNVERIFIED",
+      "location": "Saint-Hippolyte-du-Fort, Gard, France",
+      "structured_data": {
+        "rainfall_mm": 40
+      },
+      "notes": "Primary source link/document still requires verification."
+    },
+    {
+      "evidence_id": "FR30-ROAD-T0",
+      "claim": "Road/water observation supplied as approximately 5 cm.",
+      "source_type": "hydrological_or_road_observation",
+      "source_id": "Vigicrues",
+      "observed_at": "2024-10-16T11:30:00Z",
+      "source_quality": "UNKNOWN",
+      "freshness": "CURRENT",
+      "verification": "UNVERIFIED",
+      "location": "Gard, France",
+      "structured_data": {
+        "water_cm": 5,
+        "road_status": "unknown"
+      },
+      "notes": "Source attribution and timestamp require verification."
+    }
+  ],
+  "context": {
+    "antecedent_dry_days": 15,
+    "soil_saturation_pct": 5,
+    "impervious_surface_pct": 85,
+    "drainage_status": "partially_blocked",
+    "land_use": "hydrophobic crust / dry-soil context (partner-supplied description)",
+    "observed_at": "2024-10-16T11:00:00Z",
+    "source_ids": [
+      "BRGM",
+      "MeteoFrance",
+      "La Chaine Meteo"
+    ],
+    "methodology_notes": [
+      "Partner-supplied context includes temperature 35 C and hydrophobic-crust wording; these are preserved as notes because V6 has no dedicated fields for them.",
+      "70_percent_clogged was mapped conservatively to current V6 enum value 'partially_blocked'; original wording is preserved here.",
+      "Partner-supplied provenance references BRGM dry-soil runoff and a 340 mm event figure; primary sources remain to be verified."
+    ]
+  },
+  "later_outcome": null,
+  "partner_notes": "STATUS: real French case received — retrospective validation pending. Supplied expected behavior (evaluator-only): risk MODERATE; uncertainty HIGH; Critic REVISE; Safety escalation. Test hypothesis, not ground truth."
+}
