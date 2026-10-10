@@ -1,0 +1,74 @@
+{
+  "case_id": "FR-54-20120521-Nancy",
+  "title": "Nancy impervious-surface and drainage-failure retrospective case — May 2012",
+  "location": "Nancy, Meurthe-et-Moselle, France",
+  "event_time": "2012-05-21T16:00:00Z",
+  "evidence_cutoff": "2012-05-21T16:00:00Z",
+  "evidence": [
+    {
+      "evidence_id": "FR54-RAIN-T0",
+      "claim": "Rainfall observation supplied for the decision cutoff: 30 mm.",
+      "source_type": "meteorological",
+      "source_id": "MeteoFrance",
+      "observed_at": "2012-05-21T15:00:00Z",
+      "source_quality": "UNKNOWN",
+      "freshness": "CURRENT",
+      "verification": "UNVERIFIED",
+      "location": "Nancy, France",
+      "structured_data": {
+        "rainfall_mm": 30
+      },
+      "notes": "Primary source link/document still requires verification."
+    },
+    {
+      "evidence_id": "FR54-ROAD-CITY-T0",
+      "claim": "Initial/city-side report indicates no road water / network OK.",
+      "source_type": "official_or_initial_report",
+      "source_id": "initial_report",
+      "observed_at": "2012-05-21T15:30:00Z",
+      "source_quality": "UNKNOWN",
+      "freshness": "CURRENT",
+      "verification": "CONTRADICTORY",
+      "location": "Nancy, France",
+      "structured_data": {
+        "water_cm": 0,
+        "road_status": "open"
+      },
+      "notes": "Conflicts with supplied citizen-photo claim."
+    },
+    {
+      "evidence_id": "FR54-ROAD-PHOTO-T0",
+      "claim": "Citizen photo is described as showing approximately 30 cm of water.",
+      "source_type": "citizen_observation",
+      "source_id": "citizen_photo",
+      "observed_at": "2012-05-21T15:45:00Z",
+      "source_quality": "UNKNOWN",
+      "freshness": "CURRENT",
+      "verification": "CONTRADICTORY",
+      "location": "Nancy, France",
+      "structured_data": {
+        "water_cm": 30,
+        "road_status": "flooded"
+      },
+      "notes": "Conflict supplied with case; original photo/source timestamp must be verified."
+    }
+  ],
+  "context": {
+    "soil_saturation_pct": 60,
+    "impervious_surface_pct": 90,
+    "drainage_status": "clogged",
+    "land_use": "urban center / highly impervious context",
+    "observed_at": "2012-05-21T15:00:00Z",
+    "source_ids": [
+      "HAL",
+      "MeteoFrance"
+    ],
+    "methodology_notes": [
+      "LOCALIZED_FAILURE was mapped conservatively to current V6 enum value 'clogged'; original wording is preserved here.",
+      "Partner-supplied drainage blockage description: plastic waste / sediment.",
+      "Partner-supplied provenance states impervious runoff caused drainage failure; primary HAL source remains to be verified."
+    ]
+  },
+  "later_outcome": null,
+  "partner_notes": "STATUS: real French case received — retrospective validation pending. Supplied expected behavior (evaluator-only): MODERATE risk; HIGH uncertainty; UNRESOLVED conflict; block LOW and escalate to Human Gate. Test hypothesis, not ground truth."
+}
